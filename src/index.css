@@ -1,0 +1,78 @@
+@import "tailwindcss";
+
+@theme {
+  --color-luxury-black: #0a0a0a;
+  --color-luxury-gray-dark: #111111;
+  --color-luxury-gray-darker: #1a1a1a;
+  --color-luxury-gold: #d4af37;
+  --color-luxury-gold-dark: #c5a028;
+  --color-luxury-gold-darker: #b8860b;
+  --color-luxury-white: #ffffff;
+  --color-luxury-offwhite: #f5f5f5;
+  --font-inter: "Inter", sans-serif;
+}
+
+:root {
+  --bg-primary: #0a0a0a;
+  --bg-secondary: #111111;
+  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card-hover: rgba(255, 255, 255, 0.08);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.7);
+  --text-muted: rgba(255, 255, 255, 0.5);
+  --text-faint: rgba(255, 255, 255, 0.4);
+  --border-color: rgba(255, 255, 255, 0.1);
+  --border-hover: rgba(255, 255, 255, 0.2);
+  --input-bg: rgba(0, 0, 0, 0.5);
+  --input-border: rgba(255, 255, 255, 0.2);
+  --input-text: #ffffff;
+  --input-placeholder: rgba(255, 255, 255, 0.4);
+  --gradient-overlay: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.3);
+  --option-bg: #111111;
+}
+
+.light {
+  --bg-primary: #f8f7f4;
+  --bg-secondary: #ffffff;
+  --bg-card: rgba(255, 255, 255, 0.8);
+  --bg-card-hover: rgba(0, 0, 0, 0.03);
+  --text-primary: #1a1a1a;
+  --text-secondary: #4a4a4a;
+  --text-muted: #6b7280;
+  --text-faint: #9ca3af;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-hover: rgba(0, 0, 0, 0.2);
+  --input-bg: #ffffff;
+  --input-border: #d1d5db;
+  --input-text: #1a1a1a;
+  --input-placeholder: #9ca3af;
+  --gradient-overlay: linear-gradient(to top, rgba(0,0,0,0.7), transparent);
+  --shadow-card: 0 4px 30px rgba(0, 0, 0, 0.08);
+  --option-bg: #ffffff;
+}
+
+@layer base {
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: var(--font-inter);
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+@layer utilities {
+  .glassmorphism {
+    background: var(--bg-card);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--border-color);
+  }
+
+  .text-gradient {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(to right, var(--color-luxury-gold), var(--text-primary));
+  }
+}
