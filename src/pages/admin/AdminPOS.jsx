@@ -17,7 +17,9 @@ const AdminPOS = () => {
     discount: 0,
     reminder_months: 12,
     status: 'completed',
-    pay_status: 'completed'
+    pay_status: 'completed',
+    advance: 0,
+    bill_number: ''
   });
   
   const [prescription, setPrescription] = useState({});
@@ -29,10 +31,16 @@ const AdminPOS = () => {
   const frameCost = parseFloat(formData.frame_cost) || 0;
   const glassCost = parseFloat(formData.glass_cost) || 0;
   const discount = parseFloat(formData.discount) || 0;
+  const advance = parseFloat(formData.advance) || 0;
   const totalCost = frameCost + glassCost - discount;
+  const balance = Math.max(0, totalCost - advance);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (advance > totalCost) {
+      toast.error("Advance amount cannot be greater than the Total Amount.");
+      return;
+    }
     try {
       const payload = {
         user: { name: formData.name, email: formData.email, mobile: formData.mobile },
@@ -45,6 +53,8 @@ const AdminPOS = () => {
           payment_method: 'cash',
           status: formData.status,
           pay_status: formData.pay_status,
+          advance: advance,
+          bill_number: formData.bill_number
         },
         order_items: [{
           custom_frame_name: formData.frame_name,
@@ -61,7 +71,7 @@ const AdminPOS = () => {
         // Reset form
         setFormData({
           name: '', email: '', mobile: '', frame_type: 'Full Rim', frame_name: '',
-          frame_cost: 0, glass_type: '', glass_cost: 0, discount: 0, reminder_months: 12,
+          frame_cost: 0, glass_type: '', glass_cost: 0, discount: 0, advance: 0, reminder_months: 12,
           status: 'completed', pay_status: 'completed'
         });
         setPrescription({});
@@ -91,9 +101,13 @@ const AdminPOS = () => {
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Mobile Number <span className="text-red-500">*</span></label>
               <input type="text" name="mobile" required value={formData.mobile} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
-            <div>
+            {/* <div>
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Email Address</label>
               <input type="email" name="email" value={formData.email} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
+            </div> */}
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Bill Number</label>
+              <input type="text" name="bill_number" value={formData.bill_number} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
           </div>
         </div>
@@ -162,8 +176,7 @@ const AdminPOS = () => {
                 options={[
                   {value: "pending", label: "Pending"},
                   {value: "completed", label: "Completed"},
-                  {value: "refunded", label: "Refunded"},
-                  {value: "failed", label: "Failed"}
+                  {value: "partially", label: "Partially"}
                 ]}
               />
             </div>
@@ -192,9 +205,20 @@ const AdminPOS = () => {
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Discount (₹)</label>
               <input type="number" name="discount" value={formData.discount} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
-            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 flex justify-between items-center">
-              <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Total</span>
-              <span className="text-2xl font-light text-luxury-gold">₹{totalCost.toFixed(2)}</span>
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (₹)</label>
+              <input type="number" name="advance" value={formData.advance} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${advance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
+              {advance > totalCost && <p className="text-red-500 text-xs mt-1">Advance exceeds total amount!</p>}
+            </div>
+            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 col-span-1 md:col-span-4 flex flex-col sm:flex-row justify-between items-center mt-4">
+              <div className="flex flex-col mb-4 sm:mb-0">
+                <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Total Amount</span>
+                <span className="text-xl font-light text-[var(--text-primary)]">₹{totalCost.toFixed(2)}</span>
+              </div>
+              <div className="flex flex-col text-right">
+                <span className="text-xs uppercase tracking-widest text-[var(--text-muted)] text-luxury-gold">Balance Due</span>
+                <span className="text-2xl font-light text-luxury-gold">₹{balance.toFixed(2)}</span>
+              </div>
             </div>
           </div>
         </div>

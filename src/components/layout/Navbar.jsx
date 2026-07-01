@@ -4,6 +4,7 @@ import { useState, useContext } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import ProfileModal from '../shared/ProfileModal';
+import { shopConfig } from '../../config/shop.js';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,21 +21,26 @@ const Navbar = () => {
           <div className="flex items-center justify-between h-20">
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0">
-                <span className="text-2xl font-light tracking-[0.2em] text-gradient uppercase">Radheshyam</span>
-              </Link>
+              <div className="flex flex-col items-start text-gradient">
+                {/* Top Left */}
+                <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.3em] font-medium mb-[-2px] ml-1">
+                  SHREE
+                </span>
+                
+                {/* Big Middle */}
+                <span className="text-2xl font-bold uppercase tracking-wide leading-none my-1">
+                  RADHESHYAM
+                </span>
+                
+                {/* Bottom Right */}
+                <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.25em] font-medium mt-[-2px] mr-1 self-end">
+                  CHASHMAGHAR
+                </span>
+              </div>            
+                </Link>
             </div>
             <div className="hidden md:block">
               <div className="ml-10 flex items-baseline space-x-8">
-                <Link to="/products" className="text-[var(--text-primary)] hover:text-luxury-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">COLLECTION</Link>
-                <a href="/#story" className="text-[var(--text-secondary)] hover:text-luxury-gold px-3 py-2 rounded-md text-sm font-medium transition-colors">OUR STORY</a>
-                {user && user.role === 'admin' && (
-                  <Link to="/admin" className="relative group overflow-hidden px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.15em] text-[var(--bg-primary)] bg-gradient-to-r from-luxury-gold to-[#b38e28] hover:scale-105 transition-transform duration-300 shadow-[0_0_15px_rgba(212,175,55,0.4)] flex items-center">
-                    <span className="relative z-10 flex items-center gap-1.5">
-                      ADMIN PORTAL
-                    </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000 ease-in-out"></div>
-                  </Link>
-                )}
               </div>
             </div>
             <div className="flex items-center space-x-4 md:space-x-5">
@@ -89,13 +95,6 @@ const Navbar = () => {
         {isOpen && (
           <div className="md:hidden glassmorphism border-b border-[var(--border-color)]">
             <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
-              <Link to="/products" className="text-[var(--text-primary)] hover:text-luxury-gold block px-3 py-2 rounded-md text-base font-medium">COLLECTION</Link>
-              <a href="/#story" className="text-[var(--text-primary)] hover:text-luxury-gold block px-3 py-2 rounded-md text-base font-medium">OUR STORY</a>
-              {user && user.role === 'admin' && (
-                  <Link to="/admin" className="text-luxury-gold hover:text-luxury-gold-dark block px-3 py-2 rounded-md text-base font-bold tracking-widest transition-colors">
-                    ADMIN PORTAL
-                  </Link>
-              )}
               <Link to="/cart" className="text-[var(--text-primary)] hover:text-luxury-gold block px-3 py-2 rounded-md text-base font-medium">CART</Link>
               <button onClick={toggleTheme} className="text-[var(--text-primary)] hover:text-luxury-gold block w-full text-left px-3 py-2 rounded-md text-base font-medium cursor-pointer">
                 {theme === 'dark' ? 'LIGHT MODE' : 'DARK MODE'}

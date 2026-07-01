@@ -69,7 +69,7 @@ const AdminCustomers = () => {
                   <th className="px-6 py-4 font-medium tracking-wider">Contact</th>
                   <th className="px-6 py-4 font-medium tracking-wider">Type</th>
                   <th className="px-6 py-4 font-medium tracking-wider">Total Spent</th>
-                  <th className="px-6 py-4 font-medium tracking-wider text-right">Orders Count</th>
+                  <th className="px-6 py-4 font-medium tracking-wider text-center">Orders</th>
                   <th className="px-6 py-4 font-medium tracking-wider text-center">History</th>
                 </tr>
               </thead>
@@ -87,7 +87,7 @@ const AdminCustomers = () => {
                       </span>
                     </td>
                     <td className="px-6 py-4 text-luxury-gold font-medium">₹{c.total_spent.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-right">{c.orders_count}</td>
+                    <td className="px-6 py-4 text-center">{c.orders_count}</td>
                     <td className="px-6 py-4 text-center">
                       <button 
                         onClick={() => navigate(`/admin/customers/${c.id}/orders`, { state: { customer: c } })}

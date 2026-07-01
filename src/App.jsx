@@ -11,11 +11,13 @@ import CartPage from './pages/CartPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
+import LicenseActivationPage from './pages/LicenseActivationPage';
 
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPOS from './pages/admin/AdminPOS';
-import AdminProducts from './pages/admin/AdminProducts';
+import AdminParties from './pages/admin/AdminParties';
+import AdminPartyPurchases from './pages/admin/AdminPartyPurchases';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminCustomerOrders from './pages/admin/AdminCustomerOrders';
 import AdminOrders from './pages/admin/AdminOrders';
@@ -25,6 +27,7 @@ function App() {
   return (
     <Routes>
       {/* Public Routes with Standard Layout */}
+      <Route path="/activate" element={<LicenseActivationPage />} />
       <Route path="/" element={<Layout><HomePage /></Layout>} />
       <Route path="/products" element={<Layout><ProductsPage /></Layout>} />
       <Route path="/product/:id" element={<Layout><ProductDetailPage /></Layout>} />
@@ -54,9 +57,14 @@ function App() {
           <AdminLayout><AdminPOS /></AdminLayout>
         </ProtectedRoute>
       } />
-      <Route path="/admin/products" element={
+      <Route path="/admin/parties" element={
         <ProtectedRoute requireAdmin={true}>
-          <AdminLayout><AdminProducts /></AdminLayout>
+          <AdminLayout><AdminParties /></AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/parties/:id/purchases" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout><AdminPartyPurchases /></AdminLayout>
         </ProtectedRoute>
       } />
       <Route path="/admin/orders" element={

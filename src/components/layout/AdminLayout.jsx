@@ -3,6 +3,7 @@ import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import { HiOutlineHome, HiOutlineUserGroup, HiOutlineViewGrid, HiOutlineBell, HiLogout, HiOutlineExternalLink, HiMenu, HiX, HiOutlineSun, HiOutlineMoon, HiOutlineShoppingBag } from 'react-icons/hi';
+import { shopConfig } from '../../config/shop.js';
 
 const AdminLayout = ({ children }) => {
   const { logout } = useContext(AuthContext);
@@ -37,7 +38,7 @@ const AdminLayout = ({ children }) => {
       <aside className={`fixed inset-y-0 left-0 z-50 w-64 glassmorphism border-r border-[var(--border-color)] flex flex-col transform transition-transform duration-300 md:relative md:translate-x-0 ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-6">
           <div className="flex justify-between items-center mb-10">
-            <Link to="/" onClick={closeSidebar} className="text-xl font-light tracking-[0.2em] text-gradient uppercase block">Radheshyam</Link>
+            <Link to="/" onClick={closeSidebar} className="text-xl font-light tracking-[0.2em] text-gradient uppercase block">{shopConfig.shortName}</Link>
             <button className="md:hidden text-[var(--text-primary)] hover:text-luxury-gold cursor-pointer" onClick={closeSidebar}>
               <HiX className="w-6 h-6" />
             </button>
@@ -51,9 +52,9 @@ const AdminLayout = ({ children }) => {
               <HiOutlineViewGrid className="h-5 w-5" />
               <span>Walk-in POS</span>
             </Link>
-            <Link to="/admin/products" onClick={closeSidebar} className={getLinkClasses('/admin/products')}>
+            <Link to="/admin/parties" onClick={closeSidebar} className={getLinkClasses('/admin/parties')}>
               <HiOutlineViewGrid className="h-5 w-5" />
-              <span>Inventory</span>
+              <span>Parties</span>
             </Link>
             <Link to="/admin/orders" onClick={closeSidebar} className={getLinkClasses('/admin/orders')}>
               <HiOutlineShoppingBag className="h-5 w-5" />
@@ -74,10 +75,6 @@ const AdminLayout = ({ children }) => {
             {theme === 'dark' ? <HiOutlineSun className="h-5 w-5" /> : <HiOutlineMoon className="h-5 w-5" />}
             <span>{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
           </button>
-          <Link to="/" className="flex items-center space-x-3 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors w-full p-2 rounded-md hover:bg-[var(--bg-card-hover)]">
-            <HiOutlineExternalLink className="h-5 w-5" />
-            <span>Back to Store</span>
-          </Link>
           <button onClick={handleLogout} className="flex items-center space-x-3 text-[var(--text-muted)] hover:text-red-400 transition-colors w-full p-2 rounded-md hover:bg-[var(--bg-card-hover)]">
             <HiLogout className="h-5 w-5" />
             <span>Sign Out</span>

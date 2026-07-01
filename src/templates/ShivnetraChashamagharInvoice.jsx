@@ -1,0 +1,164 @@
+import React from 'react';
+import { shopConfig } from '../config/shop';
+
+const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
+  if (!order) return null;
+
+  const framePrice = parseFloat(order.frame_price || 0);
+  const glassPrice = parseFloat(order.glass_price || 0);
+  const discount = parseFloat(order.discount || 0);
+  const advance = parseFloat(order.advance || 0);
+  const finalTotal = parseFloat(order.amount !== undefined ? order.amount : order.total_price || 0);
+  const calculatedSubTotal = framePrice + glassPrice;
+  const subTotal = calculatedSubTotal > 0 ? calculatedSubTotal : (finalTotal + discount);
+  const balance = Math.max(0, finalTotal - advance);
+
+  const dateStr = new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
+
+  // Theme Colors
+  const primaryColor = '#1e3a8a'; // Deep Navy Blue
+  const accentColor = '#d4af37'; // Luxury Gold
+  const textColor = '#333333';
+  const lightBg = '#f8fafc';
+  const borderColor = '#e2e8f0';
+
+  return (
+    <div ref={ref} className="p-8" style={{ width: '800px', fontFamily: 'sans-serif', margin: '0 auto', fontSize: '14px', backgroundColor: '#ffffff', color: textColor }}>
+      
+      {/* Header Section */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `3px solid ${primaryColor}`, paddingBottom: '20px', marginBottom: '30px' }}>
+        <div>
+          <h1 style={{ margin: 0, fontSize: '38px', color: primaryColor, fontWeight: 'bold' }}>શિવનેત્ર ચશ્માઘર</h1>
+          <p style={{ margin: '5px 0 0 0', fontSize: '16px', color: accentColor, fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>Shivnetra Chashamaghar</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Premium Eyewear & Lens Specialists</p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <h2 style={{ margin: 0, fontSize: '28px', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '2px' }}>Invoice</h2>
+          {order.bill_number && <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>Bill No:</strong> {order.bill_number}</p>}
+          <p style={{ margin: '2px 0 0 0', fontSize: '14px' }}><strong>Date:</strong> {dateStr}</p>
+        </div>
+      </div>
+
+      {/* Customer Info */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', backgroundColor: lightBg, padding: '20px', borderRadius: '8px', borderLeft: `4px solid ${accentColor}` }}>
+        <div>
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Billed To:</p>
+          <p style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: primaryColor }}>{order.customerName}</p>
+          <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Mobile: {order.mobile || order.customer_mobile}</p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Order Status:</p>
+          <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: order.status === 'completed' ? '#16a34a' : accentColor, textTransform: 'uppercase' }}>{order.status || 'Processing'}</p>
+        </div>
+      </div>
+
+      {/* Prescription Table (if exists) */}
+      {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Eye Prescription</h3>
+          {order.eye_prescriptions.map((p, idx) => (
+            <table key={idx} style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+              <thead style={{ backgroundColor: primaryColor, color: '#ffffff' }}>
+                <tr>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>EYE</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>SPH</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>CYL</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>AXIS</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>ADD</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>PD</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr style={{ backgroundColor: '#ffffff', borderBottom: `1px solid ${borderColor}` }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Right (OD)</td>
+                  <td style={{ padding: '12px' }}>{p.od_sphere || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.od_cylinder || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.od_axis || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.od_add || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.od_pd || '-'}</td>
+                </tr>
+                <tr style={{ backgroundColor: lightBg }}>
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Left (OS)</td>
+                  <td style={{ padding: '12px' }}>{p.os_sphere || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.os_cylinder || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.os_axis || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.os_add || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.os_pd || '-'}</td>
+                </tr>
+              </tbody>
+            </table>
+          ))}
+        </div>
+      )}
+
+      {/* Order Items */}
+      {order.order_items && order.order_items.length > 0 && (
+        <div style={{ marginBottom: '30px' }}>
+          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Order Details</h3>
+          <table style={{ width: '100%', textAlign: 'left', borderCollapse: 'collapse' }}>
+            <thead style={{ backgroundColor: lightBg, borderBottom: `2px solid ${borderColor}` }}>
+              <tr>
+                <th style={{ padding: '12px', color: '#666', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Item Description</th>
+                <th style={{ padding: '12px', color: '#666', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {order.order_items.map((item, idx) => (
+                <tr key={idx} style={{ borderBottom: `1px solid ${borderColor}` }}>
+                  <td style={{ padding: '15px 12px' }}>
+                    <div style={{ fontWeight: 'bold', color: primaryColor, fontSize: '15px' }}>{item.custom_frame_name || item.product?.name || item.product_name || 'Eyewear Frame'}</div>
+                    {item.glass_type && <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Lens Type: {item.glass_type}</div>}
+                  </td>
+                  <td style={{ padding: '15px 12px', textAlign: 'right', fontWeight: 'bold' }}>₹{parseFloat(item.unit_price).toFixed(2)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Financial Summary */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+        <div style={{ width: '350px', backgroundColor: lightBg, padding: '20px', borderRadius: '8px' }}>
+          <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
+            <tbody>
+              <tr>
+                <td style={{ padding: '8px 0', color: '#666' }}>Frame Cost:</td>
+                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{framePrice.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 0', color: '#666' }}>Glass Cost:</td>
+                <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{glassPrice.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 0', color: '#666', borderTop: `1px solid ${borderColor}` }}>Sub Total:</td>
+                <td style={{ padding: '8px 0', fontWeight: 'bold', borderTop: `1px solid ${borderColor}` }}>₹{subTotal.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '8px 0', color: '#dc2626' }}>Discount:</td>
+                <td style={{ padding: '8px 0', color: '#dc2626', fontWeight: 'bold' }}>-₹{discount.toFixed(2)}</td>
+              </tr>
+              <tr>
+                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '16px', borderTop: `2px solid ${primaryColor}` }}>Final Price:</td>
+                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '16px', borderTop: `2px solid ${primaryColor}` }}>₹{finalTotal.toFixed(2)}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      {/* Footer */}
+      <div style={{ marginTop: '50px', textAlign: 'center', borderTop: `1px solid ${borderColor}`, paddingTop: '20px' }}>
+        <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold', color: primaryColor }}>{shopConfig.shopName}</p>
+        {shopConfig.address && (
+          <p style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#666' }}>{shopConfig.address}</p>
+        )}
+        {shopConfig.phone && (
+          <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Contact: {shopConfig.phone}</p>
+        )}
+      </div>
+    </div>
+  );
+});
+
+export default ShivnetraChashamagharInvoice;

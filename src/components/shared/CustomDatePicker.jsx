@@ -51,8 +51,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
   let displayValue = "Select Date";
   if (value) {
     const [y, m, d] = value.split('-');
-    const dateObj = new Date(y, m - 1, d);
-    displayValue = `${dateObj.getDate()} ${monthNames[dateObj.getMonth()].slice(0, 3)} ${dateObj.getFullYear()}`;
+    displayValue = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
   }
 
   return (
@@ -60,7 +59,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
       {/* Trigger Button / Pill */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded-full cursor-pointer transition-all duration-300 border backdrop-blur-sm
+        className={`flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-all duration-300 border backdrop-blur-sm
           ${value 
             ? 'bg-luxury-gold/10 border-luxury-gold/40 text-[var(--text-primary)] shadow-[0_0_15px_rgba(212,175,55,0.15)] hover:bg-luxury-gold/20' 
             : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-luxury-gold/50 hover:text-[var(--text-primary)]'

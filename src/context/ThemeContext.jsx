@@ -1,15 +1,16 @@
 import { createContext, useState, useEffect } from 'react';
+import { shopConfig } from '../config/shop.js';
 
 export const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [theme, setTheme] = useState(() => {
-    const saved = localStorage.getItem('radheshyam-theme');
+    const saved = localStorage.getItem(shopConfig.themeKey);
     return saved || 'dark';
   });
 
   useEffect(() => {
-    localStorage.setItem('radheshyam-theme', theme);
+    localStorage.setItem(shopConfig.themeKey, theme);
     if (theme === 'light') {
       document.documentElement.classList.add('light');
     } else {

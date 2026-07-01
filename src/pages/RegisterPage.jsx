@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import api from '../services/api';
-
+import { shopConfig } from '../config/shop.js';
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
     name: '',
@@ -37,7 +37,7 @@ const RegisterPage = () => {
         <div>
           <h2 className="mt-2 text-center text-3xl font-light tracking-widest text-[var(--text-primary)] uppercase">Register</h2>
           <p className="mt-2 text-center text-sm text-[var(--text-secondary)]">
-            Join the Radheshyam exclusive club
+            Join the {shopConfig.shortName} exclusive club
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

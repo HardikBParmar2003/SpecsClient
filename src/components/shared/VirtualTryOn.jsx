@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { HiX } from 'react-icons/hi';
 import { HiOutlineArrowDownTray, HiOutlineCamera } from 'react-icons/hi2';
 import { toast } from 'react-hot-toast';
+import { shopConfig } from '../../config/shop.js';
 
 const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
   const videoRef = useRef(null);
@@ -177,7 +178,7 @@ const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
   const downloadSnapshot = () => {
     const link = document.createElement('a');
     link.href = snapshot;
-    link.download = 'radheshyam-virtual-tryon.png';
+    link.download = `${shopConfig.downloadPrefix}-virtual-tryon.png`;
     link.click();
   };
 

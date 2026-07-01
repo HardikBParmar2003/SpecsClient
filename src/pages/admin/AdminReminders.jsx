@@ -3,6 +3,7 @@ import { toast } from 'react-hot-toast';
 import api from '../../services/api';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { HiOutlineMail } from 'react-icons/hi';
+import { shopConfig } from '../../config/shop';
 
 const AdminReminders = () => {
   const [reminders, setReminders] = useState([]);
@@ -66,8 +67,7 @@ const AdminReminders = () => {
               </thead>
               <tbody className="divide-y divide-[var(--border-color)]">
                 {reminders.map((rem) => {
-                  const messageText = encodeURIComponent(`👓 *ખાસ યાદ - રાધેશ્યામ ચશ્માઘર* 🙏\n\nનમસ્તે ${rem.name} જી,\n\nઆશા છે કે તમે કુશળ હશો. તમે છેલ્લે તારીખ  ${new Date(rem.order_date).toLocaleDateString('en-GB')}  ના રોજ અમારા રાધેશ્યામ ચશ્માઘર પરથી ચશ્મા ખરીદ્યા હતા.\n\nઆંખોની સારી તંદુરસ્તી અને નંબરની ચોકસાઈ જાળવી રાખવા માટે, સમયસર આઈ-ચેકઅપ (Eye Check-up) કરાવી લેવું ખૂબ જ હિતાવહ છે. બસ, તમારી આંખોની કાળજીના ભાગરૂપે જ અમે તમને આ નાની યાદ અપાવી રહ્યા છીએ.\n\nતમને જ્યારે પણ અનુકૂળતા હોય ત્યારે પધારવા વિનંતી છે. અમને રાધેશ્યામ ચશ્માઘર પરિવાર વતી તમારી ફરી સેવા કરવાનો અને અમારું નવું કલેક્શન બતાવવાનો ખૂબ આનંદ થશે! ✨`);
-                  // const messageText = encodeURIComponent(`🔔 *Your Specs Reminder* 🔔\n\nHey ${rem.name} 👋,\nYou bought new specs on ${new Date(rem.order_date).toLocaleDateString()}, and it's time for a check-up! Consider checking out our latest specs.`);
+                  const messageText = encodeURIComponent(`👓 *ખાસ યાદ - ${shopConfig.reminderShopName}* 🙏\n\nનમસ્તે ${rem.name} જી,\n\nઆશા છે કે તમે કુશળ હશો. તમે છેલ્લે તારીખ  ${new Date(rem.order_date).toLocaleDateString('en-GB')}  ના રોજ અમારા ${shopConfig.reminderShopName} ચશ્માઘર પરથી ચશ્મા ખરીદ્યા હતા.\n\nઆંખોની સારી તંદુરસ્તી અને નંબરની ચોકસાઈ જાળવી રાખવા માટે, સમયસર આઈ-ચેકઅપ (Eye Check-up) કરાવી લેવું ખૂબ જ હિતાવહ છે. બસ, તમારી આંખોની કાળજીના ભાગરૂપે જ અમે તમને આ નાની યાદ અપાવી રહ્યા છીએ.\n\nતમને જ્યારે પણ અનુકૂળતા હોય ત્યારે પધારવા વિનંતી છે. અમને ${shopConfig.reminderShopName} ચશ્માઘર પરિવાર વતી તમારી ફરી સેવા કરવાનો અને અમારું નવું કલેક્શન બતાવવાનો ખૂબ આનંદ થશે! ✨`);
                   const waUrl = `https://wa.me/${rem.mobile}?text=${messageText}`;
                   return (
                   <tr key={rem.order_id} className="hover:bg-[var(--bg-card)] transition-colors">

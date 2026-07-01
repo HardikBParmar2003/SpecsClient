@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">SpecsShop</string>
+    <string name="title_activity_main">SpecsShop</string>
+    <string name="package_name">com.specs.shop</string>
+    <string name="custom_url_scheme">com.specs.shop</string>
+</resources>

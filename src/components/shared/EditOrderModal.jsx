@@ -11,7 +11,9 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
     pay_status: order.pay_status || 'pending',
     frame_price: order.frame_price || 0,
     glass_price: order.glass_price || 0,
-    discount: order.discount || 0
+    discount: order.discount || 0,
+    advance: order.advance || 0,
+    bill_number: order.bill_number || ''
   });
 
   const [orderItems, setOrderItems] = useState(() => {
@@ -31,6 +33,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   const framePriceVal = parseFloat(formData.frame_price) || 0;
   const glassPriceVal = parseFloat(formData.glass_price) || 0;
   const discountVal = parseFloat(formData.discount) || 0;
+  const advanceVal = parseFloat(formData.advance) || 0;
 
   const manualSubtotal = (framePriceVal > 0 || glassPriceVal > 0) ? (framePriceVal + glassPriceVal) : (() => {
     if (orderItems && orderItems.length > 0) {
@@ -40,6 +43,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   })();
 
   const calculatedTotal = manualSubtotal - discountVal;
+  const balance = Math.max(0, calculatedTotal - advanceVal);
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...orderItems];
@@ -48,6 +52,10 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   };
 
   const handleSave = async () => {
+    if (advanceVal > calculatedTotal) {
+      toast.error("Advance amount cannot be greater than the Final Total.");
+      return;
+    }
     setIsSaving(true);
     try {
       const itemsToSave = [...orderItems];
@@ -60,7 +68,9 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
         frame_price: framePriceVal,
         glass_price: glassPriceVal,
         discount: discountVal,
+        advance: advanceVal,
         amount: calculatedTotal,
+        bill_number: formData.bill_number,
         order_items: itemsToSave,
         eye_prescriptions: prescriptions
       };
@@ -83,7 +93,9 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
       <div className="w-full h-full flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
           <div>
-            <h2 className="text-lg uppercase tracking-widest text-luxury-gold">Edit Order #{order.id}</h2>
+            <h2 className="text-lg uppercase tracking-widest text-luxury-gold">
+              Edit Order {order.bill_number && <span className="text-[var(--text-muted)] ml-2 border-l border-[var(--border-color)] pl-2">Bill No: {order.bill_number}</span>}
+            </h2>
             <p className="text-xs text-[var(--text-muted)] mt-1">Make corrections to order details</p>
           </div>
           <div className="flex gap-3">
@@ -196,9 +208,13 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                       options={[
                         {value: "pending", label: "Pending"},
                         {value: "completed", label: "Completed"},
-                        {value: "refunded", label: "Refunded"}
+                        {value: "partially", label: "Partially"}
                       ]}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Bill Number</label>
+                    <input type="text" name="bill_number" value={formData.bill_number} onChange={(e) => setFormData({...formData, bill_number: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-luxury-gold transition-colors" />
                   </div>
                 </div>
               </div>
@@ -243,14 +259,26 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                       className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-luxury-gold transition-colors"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (₹)</label>
+                    <input 
+                      type="number" 
+                      value={formData.advance} 
+                      onChange={(e) => setFormData({...formData, advance: e.target.value})}
+                      className={`w-full bg-[var(--input-bg)] border rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none transition-colors ${advanceVal > calculatedTotal ? 'border-red-500 focus:border-red-500' : 'border-[var(--border-color)] focus:border-luxury-gold'}`}
+                    />
+                    {advanceVal > calculatedTotal && <p className="text-red-500 text-xs mt-1">Advance exceeds final total!</p>}
+                  </div>
                 </div>
 
                 <div className="pt-5 border-t border-[var(--border-color)]">
                   <div className="flex justify-between items-center mb-1">
-                    <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Final Total</span>
+                    <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Total</span>
+                    <span className="text-lg font-medium text-[var(--text-primary)]">₹{calculatedTotal.toFixed(2)}</span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-4xl font-light text-luxury-gold">₹{calculatedTotal.toFixed(2)}</span>
+                  <div className="flex justify-between items-center mt-3 pt-3 border-t border-[var(--border-color)] border-dashed">
+                    <span className="text-xs uppercase tracking-widest text-luxury-gold">Balance Due</span>
+                    <span className="text-3xl font-light text-luxury-gold">₹{balance.toFixed(2)}</span>
                   </div>
                 </div>
               </div>

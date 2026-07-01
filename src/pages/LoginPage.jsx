@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
+import { shopConfig } from '../config/shop.js';
 
 const LoginPage = () => {
   const [emailOrMobile, setEmailOrMobile] = useState('');
@@ -17,7 +18,11 @@ const LoginPage = () => {
       const res = await login(emailOrMobile, password);
       if (res.success) {
         toast.success('Welcome back!');
-        navigate('/');
+        if (res.data?.user?.role === 'admin') {
+          navigate('/admin');
+        } else {
+          navigate('/admin'); // Fallback in case user object isn't fully propagated in response
+        }
       } else {
         toast.error(res.message);
       }
@@ -91,7 +96,7 @@ const LoginPage = () => {
         </form>
         <div className="mt-6 text-center">
           <p className="text-sm text-[var(--text-secondary)]">
-            New to Radheshyam?{' '}
+            New to {shopConfig.shortName}?{' '}
             <Link to="/register" className="font-medium text-luxury-gold hover:text-[var(--text-primary)] transition-colors">
               Create an account
             </Link>

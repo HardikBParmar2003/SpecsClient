@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
-
+import { shopConfig } from '../config/shop.js';
 const HomePage = () => {
   const { user } = useContext(AuthContext);
 
@@ -19,8 +19,16 @@ const HomePage = () => {
         </div>
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
-          <h1 className="text-5xl md:text-7xl font-light tracking-[0.2em] text-gradient uppercase mb-6 animate-fade-in-up">
-            Radheshyam
+          <h1 className="inline-flex flex-col items-start text-gradient mb-6 animate-fade-in-up">
+            <span className="text-sm md:text-xl uppercase tracking-[0.3em] font-medium mb-[-4px] md:mb-[-8px] ml-1 md:ml-2">
+              SHREE
+            </span>
+            <span className="text-5xl md:text-7xl font-bold uppercase tracking-wide leading-none my-1 md:my-2">
+              RADHESHYAM
+            </span>
+            <span className="text-sm md:text-xl uppercase tracking-[0.25em] font-medium mt-[-4px] md:mt-[-8px] mr-1 md:mr-2  self-end">
+              CHASHMAGHAR
+            </span>
           </h1>
           <p className="text-lg md:text-2xl text-white/80 font-light tracking-widest mb-10 animate-fade-in-up animation-delay-200">
             PREMIUM EYEWEAR SINCE 1990
@@ -44,39 +52,6 @@ const HomePage = () => {
            {['Ray-Ban', 'Oakley', 'Prada', 'Gucci', 'Silhouette'].map((brand, idx) => (
              <span key={idx} className="text-xl md:text-2xl font-bold tracking-wider uppercase text-white">{brand}</span>
            ))}
-        </div>
-      </section>
-
-      {/* Our Story */}
-      <section id="story" className="py-24 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-light tracking-[0.15em] uppercase mb-4">Our Story</h2>
-          <div className="w-16 h-px bg-luxury-gold mx-auto"></div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
-          <div className="relative overflow-hidden rounded-2xl h-80">
-            {/* <img loading="lazy" layout="fill" class="gallpop_content_image " alt="" src="" style="height: 100%;"></img> */}
-            <img 
-              // src="https://images.unsplash.com/photo-1574258495973-f7977a85ee7e?w=800" 
-              src="https://content.jdmagicbox.com/comp/bhavnagar/q3/0278px278.x278.100720095634.c9q3/catalogue/radheshyam-chasma-ghar-bhavnagar-jyarwbb7wd.jpg?imwidth=463.3333333333333" 
-              alt="Our Heritage" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="space-y-6">
-            <h3 className="text-2xl font-light tracking-widest uppercase text-luxury-gold">Since 1990</h3>
-            <p className="text-[var(--text-secondary)] leading-relaxed">
-              What began as a humble optical shop has blossomed into a destination for discerning eyewear connoisseurs. 
-              At Radheshyam Chashmaghar, we believe that the right pair of glasses isn't just an accessory — it's an expression of your personality.
-            </p>
-            <p className="text-[var(--text-secondary)] leading-relaxed">
-              With over three decades of expertise, we've perfected the art of matching faces with frames. 
-              From precision prescriptions to luxury brands, every detail is curated with care and craftsmanship.
-            </p>
-            <Link to="/products" className="inline-block border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-black px-6 py-3 uppercase tracking-widest text-sm transition-all duration-300">
-              Explore Collection
-            </Link>
-          </div>
         </div>
       </section>
 
