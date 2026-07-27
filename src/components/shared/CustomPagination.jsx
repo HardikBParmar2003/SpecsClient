@@ -55,6 +55,7 @@ const CustomPagination = ({ page, totalPages, setPage, limit, setLimit }) => {
               { value: '50', label: '50' },
               { value: '100', label: '100' }
             ]}
+            direction="up"
           />
         </div>
         <span className="text-xs text-[var(--text-muted)] uppercase tracking-wider">entries</span>

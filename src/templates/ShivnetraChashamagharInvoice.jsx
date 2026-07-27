@@ -8,10 +8,12 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
   const glassPrice = parseFloat(order.glass_price || 0);
   const discount = parseFloat(order.discount || 0);
   const advance = parseFloat(order.advance || 0);
+  const advanceOnline = parseFloat(order.advance_online || 0);
+  const totalAdvance = advance + advanceOnline;
   const finalTotal = parseFloat(order.amount !== undefined ? order.amount : order.total_price || 0);
   const calculatedSubTotal = framePrice + glassPrice;
   const subTotal = calculatedSubTotal > 0 ? calculatedSubTotal : (finalTotal + discount);
-  const balance = Math.max(0, finalTotal - advance);
+  const balance = Math.max(0, finalTotal - totalAdvance);
 
   const dateStr = new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' });
 
@@ -28,27 +30,31 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
       {/* Header Section */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: `3px solid ${primaryColor}`, paddingBottom: '20px', marginBottom: '30px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '38px', color: primaryColor, fontWeight: 'bold' }}>શિવનેત્ર ચશ્માઘર</h1>
-          <p style={{ margin: '5px 0 0 0', fontSize: '16px', color: accentColor, fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>Shivnetra Chashamaghar</p>
-          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Premium Eyewear & Lens Specialists</p>
+          <h1 style={{ margin: 0, fontSize: '20px', color: accentColor, fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{shopConfig.shopName}</h1>
+          {/* <p style={{ margin: '5px 0 0 0', fontSize: '16px', color: accentColor, fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>{shopConfig.shopName}</p> */}
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Shop no g-1 shiv shakti blessing near by nirmal plaza</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Sanskar mandal thi rammantra road, Bhavnagar 364002</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Mo: +91 97377 61917</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <h2 style={{ margin: 0, fontSize: '28px', color: '#cbd5e1', textTransform: 'uppercase', letterSpacing: '2px' }}>Invoice</h2>
-          {order.bill_number && <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>Bill No:</strong> {order.bill_number}</p>}
-          <p style={{ margin: '2px 0 0 0', fontSize: '14px' }}><strong>Date:</strong> {dateStr}</p>
+          <h1 style={{ margin: 0, fontSize: '20px', color: accentColor, fontWeight: 'bold', letterSpacing: '0.5px', textTransform: 'uppercase' }}>{shopConfig.reminderShopName}</h1>
+          {/* <p style={{ margin: '5px 0 0 0', fontSize: '16px', color: accentColor, fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>{shopConfig.shopName}</p> */}
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>શોપ નં: જી-૧, શિવ શક્તિ બ્લેસિંગ, નિર્મલ પ્લાઝા ની બાજુમા,</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>સંસ્કાર મંડળ થી રામમંત્ર મંદિર રોડ, ભાવનગર - ૩૬૪૦૦૨</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '13px', color: '#666' }}>Mo: +91 97377 61917</p>
         </div>
       </div>
 
       {/* Customer Info */}
       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px', backgroundColor: lightBg, padding: '20px', borderRadius: '8px', borderLeft: `4px solid ${accentColor}` }}>
         <div>
-          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Billed To:</p>
-          <p style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: primaryColor }}>{order.customerName}</p>
-          <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Mobile: {order.mobile || order.customer_mobile}</p>
+          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Customer Name:</p>
+          <p style={{ margin: 0, fontSize: '18px', fontWeight: 'bold', color: primaryColor }}>{order.customerName || order.user?.name || 'Customer'}</p>
+          <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}>Mobile: {order.mobile || order.customer_mobile || order.customerMobile || order.user?.mobile || 'N/A'}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <p style={{ margin: '0 0 5px 0', fontSize: '12px', color: '#666', textTransform: 'uppercase', letterSpacing: '1px' }}>Order Status:</p>
-          <p style={{ margin: 0, fontSize: '16px', fontWeight: 'bold', color: order.status === 'completed' ? '#16a34a' : accentColor, textTransform: 'uppercase' }}>{order.status || 'Processing'}</p>
+          <p style={{ margin: '2px 0 0 0', fontSize: '14px' }}><strong>Date:</strong> {dateStr}</p>
+          {order.bill_number && <p style={{ margin: '5px 0 0 0', fontSize: '14px' }}><strong>Bill No:</strong> {order.bill_number}</p>}
         </div>
       </div>
 
@@ -65,7 +71,7 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
                   <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>CYL</th>
                   <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>AXIS</th>
                   <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>ADD</th>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>PD</th>
+                  {/* <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>PD</th> */}
                 </tr>
               </thead>
               <tbody>
@@ -75,7 +81,7 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
                   <td style={{ padding: '12px' }}>{p.od_cylinder || '-'}</td>
                   <td style={{ padding: '12px' }}>{p.od_axis || '-'}</td>
                   <td style={{ padding: '12px' }}>{p.od_add || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.od_pd || '-'}</td>
+                  {/* <td style={{ padding: '12px' }}>{p.od_pd || '-'}</td> */}
                 </tr>
                 <tr style={{ backgroundColor: lightBg }}>
                   <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Left (OS)</td>
@@ -83,7 +89,7 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
                   <td style={{ padding: '12px' }}>{p.os_cylinder || '-'}</td>
                   <td style={{ padding: '12px' }}>{p.os_axis || '-'}</td>
                   <td style={{ padding: '12px' }}>{p.os_add || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.os_pd || '-'}</td>
+                  {/* <td style={{ padding: '12px' }}>{p.os_pd || '-'}</td> */}
                 </tr>
               </tbody>
             </table>
@@ -134,13 +140,15 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
                 <td style={{ padding: '8px 0', color: '#666', borderTop: `1px solid ${borderColor}` }}>Sub Total:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold', borderTop: `1px solid ${borderColor}` }}>₹{subTotal.toFixed(2)}</td>
               </tr>
+              {discount > 0 && (
+                <tr>
+                  <td style={{ padding: '8px 0', color: '#dc2626' }}>Discount:</td>
+                  <td style={{ padding: '8px 0', color: '#dc2626', fontWeight: 'bold' }}>-₹{discount.toFixed(2)}</td>
+                </tr>
+              )}
               <tr>
-                <td style={{ padding: '8px 0', color: '#dc2626' }}>Discount:</td>
-                <td style={{ padding: '8px 0', color: '#dc2626', fontWeight: 'bold' }}>-₹{discount.toFixed(2)}</td>
-              </tr>
-              <tr>
-                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '16px', borderTop: `2px solid ${primaryColor}` }}>Final Price:</td>
-                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '16px', borderTop: `2px solid ${primaryColor}` }}>₹{finalTotal.toFixed(2)}</td>
+                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '18px', borderTop: `2px solid ${primaryColor}` }}>Total Amount:</td>
+                <td style={{ padding: '12px 0', color: primaryColor, fontWeight: 'bold', fontSize: '18px', borderTop: `2px solid ${primaryColor}` }}>₹{finalTotal.toFixed(2)}</td>
               </tr>
             </tbody>
           </table>
@@ -148,7 +156,7 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
       </div>
       
       {/* Footer */}
-      <div style={{ marginTop: '50px', textAlign: 'center', borderTop: `1px solid ${borderColor}`, paddingTop: '20px' }}>
+      {/* <div style={{ marginTop: '50px', textAlign: 'center', borderTop: `1px solid ${borderColor}`, paddingTop: '20px' }}>
         <p style={{ margin: '0 0 5px 0', fontSize: '16px', fontWeight: 'bold', color: primaryColor }}>{shopConfig.shopName}</p>
         {shopConfig.address && (
           <p style={{ margin: '0 0 3px 0', fontSize: '12px', color: '#666' }}>{shopConfig.address}</p>
@@ -156,7 +164,7 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
         {shopConfig.phone && (
           <p style={{ margin: 0, fontSize: '12px', color: '#666' }}>Contact: {shopConfig.phone}</p>
         )}
-      </div>
+      </div> */}
     </div>
   );
 });

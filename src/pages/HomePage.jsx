@@ -20,26 +20,39 @@ const HomePage = () => {
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="inline-flex flex-col items-start text-gradient mb-6 animate-fade-in-up">
-            <span className="text-sm md:text-xl uppercase tracking-[0.3em] font-medium mb-[-4px] md:mb-[-8px] ml-1 md:ml-2">
+            {/* <span className="text-sm md:text-xl uppercase tracking-[0.3em] font-medium mb-[-4px] md:mb-[-8px] ml-1 md:ml-2">
               SHREE
-            </span>
+            </span> */}
             <span className="text-5xl md:text-7xl font-bold uppercase tracking-wide leading-none my-1 md:my-2">
-              RADHESHYAM
+              {/* SHIVNETRA */}
+              OPTIC PALACE
+              {/* SUPER OPTICS */}
             </span>
             <span className="text-sm md:text-xl uppercase tracking-[0.25em] font-medium mt-[-4px] md:mt-[-8px] mr-1 md:mr-2  self-end">
-              CHASHMAGHAR
+              {/* CHASHMAGHAR */}
+              CONTACT LENS CLINIC
             </span>
           </h1>
           <p className="text-lg md:text-2xl text-white/80 font-light tracking-widest mb-10 animate-fade-in-up animation-delay-200">
             PREMIUM EYEWEAR SINCE 1990
           </p>
           <div className="animate-fade-in-up animation-delay-400 flex flex-col sm:flex-row justify-center gap-4">
-            <Link to="/products" className="inline-block border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-[var(--bg-primary)] px-8 py-4 uppercase tracking-widest text-sm transition-all duration-300">
-              Explore Collection
-            </Link>
-            {!user && (
+            {user?.role === 'admin' ? (
+              <Link to="/admin" className="inline-block border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-[var(--bg-primary)] px-8 py-4 uppercase tracking-widest text-sm transition-all duration-300">
+                Admin Dashboard
+              </Link>
+            ) : (
+              <Link to="/products" className="inline-block border border-luxury-gold text-luxury-gold hover:bg-luxury-gold hover:text-[var(--bg-primary)] px-8 py-4 uppercase tracking-widest text-sm transition-all duration-300">
+                Explore Collection
+              </Link>
+            )}
+            {!user ? (
               <Link to="/login" className="inline-block bg-luxury-gold text-[var(--bg-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] px-8 py-4 uppercase tracking-widest text-sm transition-all duration-300 font-medium">
                 Sign In / Join
+              </Link>
+            ) : (
+              <Link to="/profile" className="inline-block bg-luxury-gold text-[var(--bg-primary)] hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] px-8 py-4 uppercase tracking-widest text-sm transition-all duration-300 font-medium">
+                Update Profile
               </Link>
             )}
           </div>

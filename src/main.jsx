@@ -10,11 +10,11 @@ import App from './App.jsx';
 
 import { shopConfig } from './config/shop.js';
 
-import { discoverServer } from './services/api.js';
+import { initializeDatabase } from './services/db.js';
 
 document.getElementById('app-title').innerText = shopConfig.shopName;
 
-discoverServer().then(() => {
+initializeDatabase().then(() => {
   createRoot(document.getElementById('root')).render(
     <React.StrictMode>
       <ErrorBoundary>

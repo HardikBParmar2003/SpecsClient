@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import PrescriptionForm from '../../components/shared/PrescriptionForm';
 import CustomSelect from '../../components/shared/CustomSelect';
 
@@ -16,9 +16,10 @@ const AdminPOS = () => {
     glass_cost: 0,
     discount: 0,
     reminder_months: 12,
-    status: 'completed',
-    pay_status: 'completed',
+    status: 'pending',
+    pay_status: 'pending',
     advance: 0,
+    advance_online: 0,
     bill_number: ''
   });
   
@@ -32,52 +33,85 @@ const AdminPOS = () => {
   const glassCost = parseFloat(formData.glass_cost) || 0;
   const discount = parseFloat(formData.discount) || 0;
   const advance = parseFloat(formData.advance) || 0;
+  const advance_online = parseFloat(formData.advance_online) || 0;
+  const totalAdvance = advance + advance_online;
   const totalCost = frameCost + glassCost - discount;
-  const balance = Math.max(0, totalCost - advance);
+  const balance = Math.max(0, totalCost - totalAdvance);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (advance > totalCost) {
-      toast.error("Advance amount cannot be greater than the Total Amount.");
+    if (totalAdvance > totalCost) {
+      toast.error("Total advance amount cannot be greater than the Total Amount.");
       return;
     }
     try {
-      const payload = {
-        user: { name: formData.name, email: formData.email, mobile: formData.mobile },
-        order: {
-          frame_price: frameCost,
-          glass_price: glassCost,
-          discount: discount,
-          total_price: totalCost,
-          reminder_months: formData.reminder_months,
-          payment_method: 'cash',
-          status: formData.status,
-          pay_status: formData.pay_status,
-          advance: advance,
-          bill_number: formData.bill_number
-        },
-        order_items: [{
-          custom_frame_name: formData.frame_name,
-          glass_type: formData.glass_type,
-          unit_price: frameCost + glassCost,
-          quantity: 1
-        }],
-        prescription: prescription
-      };
-
-      const { data } = await api.post('/orders/walk-in', payload);
-      if (data.success) {
-        toast.success('Walk-in order created successfully!');
-        // Reset form
-        setFormData({
-          name: '', email: '', mobile: '', frame_type: 'Full Rim', frame_name: '',
-          frame_cost: 0, glass_type: '', glass_cost: 0, discount: 0, advance: 0, reminder_months: 12,
-          status: 'completed', pay_status: 'completed'
+      // 1. Find or create user
+      let customer = await db.users.where('mobile').equals(formData.mobile).first();
+      if (!customer) {
+        const userId = await db.users.add({
+          name: formData.name,
+          email: formData.email || '',
+          mobile: formData.mobile,
+          role: 'customer',
+          cust_type: 'offline',
+          created_at: new Date(),
+          updated_at: new Date()
         });
-        setPrescription({});
+        customer = await db.users.get(userId);
       }
+
+      // 2. Create Order
+      const orderId = await db.orders.add({
+        user_id: customer.id,
+        ord_type: 'walk-in',
+        status: formData.status,
+        frame_price: frameCost,
+        glass_price: glassCost,
+        discount: discount,
+        total_price: totalCost,
+        advance: advance,
+        advance_online: advance_online,
+        pay_status: formData.pay_status,
+        pay_method: 'cash',
+        bill_number: formData.bill_number,
+        reminder_months: formData.reminder_months,
+        reminder_date: new Date(new Date().setMonth(new Date().getMonth() + parseInt(formData.reminder_months))),
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+
+      // 3. Create Order Item
+      await db.order_items.add({
+        order_id: orderId,
+        custom_frame_name: formData.frame_name,
+        glass_type: formData.glass_type,
+        unit_price: frameCost + glassCost,
+        quantity: 1,
+        created_at: new Date()
+      });
+
+      // 4. Create Eye Prescription (if filled)
+      if (prescription.od_sphere || prescription.os_sphere) {
+        await db.eye_prescriptions.add({
+          user_id: customer.id,
+          order_id: orderId,
+          ...prescription,
+          prescription_date: new Date(),
+          created_at: new Date()
+        });
+      }
+
+      toast.success('Walk-in order created successfully!');
+      // Reset form
+      setFormData({
+        name: '', email: '', mobile: '', frame_type: 'Full Rim', frame_name: '',
+        frame_cost: 0, glass_type: '', glass_cost: 0, discount: 0, advance: 0, advance_online: 0, reminder_months: 12,
+        status: 'pending', pay_status: 'pending', bill_number: ''
+      });
+      setPrescription({});
+
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create order');
+      toast.error('Failed to create order');
     }
   };
 
@@ -192,7 +226,7 @@ const AdminPOS = () => {
         {/* Section 3: Billing */}
         <div className="glassmorphism p-6 rounded-xl border border-luxury-gold/30 bg-luxury-gold/5">
           <h2 className="text-sm font-medium tracking-widest uppercase text-luxury-gold mb-6 border-b border-luxury-gold/20 pb-2">4. Billing Summary</h2>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
             <div>
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Cost (₹)</label>
               <input type="number" name="frame_cost" value={formData.frame_cost} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
@@ -206,12 +240,16 @@ const AdminPOS = () => {
               <input type="number" name="discount" value={formData.discount} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (₹)</label>
-              <input type="number" name="advance" value={formData.advance} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${advance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
-              {advance > totalCost && <p className="text-red-500 text-xs mt-1">Advance exceeds total amount!</p>}
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Offline) (₹)</label>
+              <input type="number" name="advance" value={formData.advance} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${totalAdvance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
             </div>
-            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 col-span-1 md:col-span-4 flex flex-col sm:flex-row justify-between items-center mt-4">
-              <div className="flex flex-col mb-4 sm:mb-0">
+            <div>
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Online) (₹)</label>
+              <input type="number" name="advance_online" value={formData.advance_online} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${totalAdvance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
+            </div>
+            {totalAdvance > totalCost && <p className="text-red-500 text-xs mt-1 col-span-1 md:col-span-5">Total advance exceeds total amount!</p>}
+            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 col-span-1 md:col-span-5 flex justify-between items-center mt-4">
+              <div className="flex flex-col">
                 <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Total Amount</span>
                 <span className="text-xl font-light text-[var(--text-primary)]">₹{totalCost.toFixed(2)}</span>
               </div>

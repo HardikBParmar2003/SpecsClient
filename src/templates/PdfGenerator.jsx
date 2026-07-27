@@ -1,12 +1,17 @@
 import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
+import { Capacitor } from '@capacitor/core';
 import { SHOP_CONFIG } from '../config/shopConfig';
 import ShivnetraChashamagharInvoice from './ShivnetraChashamagharInvoice';
+import CityPalaxeInvoice from './CityPalaxeInvoice';
 
 // Map of all available templates
 const TEMPLATES = {
   ShivnetraChashamaghar: ShivnetraChashamagharInvoice,
+  CityPalaxe: CityPalaxeInvoice,
   // add more templates here in the future
 };
 
@@ -51,7 +56,22 @@ const PdfGenerator = forwardRef(({ order }, ref) => {
         
         const fileName = `${formattedName}-${day}-${month}-${year}.pdf`;
         
-        pdf.save(fileName);
+        if (Capacitor.isNativePlatform()) {
+          const pdfBase64 = pdf.output('datauristring').split(',')[1];
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: pdfBase64,
+            directory: Directory.Cache
+          });
+          
+          await Share.share({
+            title: 'Invoice PDF',
+            url: savedFile.uri,
+            dialogTitle: 'Save or Share Invoice'
+          });
+        } else {
+          pdf.save(fileName);
+        }
         
         return { success: true };
       } catch (error) {

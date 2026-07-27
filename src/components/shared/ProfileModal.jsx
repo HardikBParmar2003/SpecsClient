@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect, useRef } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import { HiOutlineEye, HiOutlineEyeOff, HiX, HiOutlineMail, HiOutlinePhone, HiOutlineUser, HiOutlineLockClosed, HiPencil } from 'react-icons/hi';
 
 const ProfileModal = ({ isOpen, onClose }) => {
@@ -51,50 +51,46 @@ const ProfileModal = ({ isOpen, onClose }) => {
       return;
     }
 
-    // Show preview immediately
-    const reader = new FileReader();
-    reader.onloadend = () => setAvatarPreview(reader.result);
-    reader.readAsDataURL(file);
-
-    // Upload to server
     setUploading(true);
-    try {
-      const uploadData = new FormData();
-      uploadData.append('image', file);
-      const { data: uploadRes } = await api.post('/upload', uploadData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+    const reader = new FileReader();
+    reader.onloadend = async () => {
+      try {
+        const base64Img = reader.result;
+        setAvatarPreview(base64Img);
 
-      if (uploadRes.success) {
-        // Save avatar_url to user profile
-        const { data: profileRes } = await api.put('/auth/profile', {
-          avatar_url: uploadRes.data.url
-        });
-        if (profileRes.success) {
-          setUser({ ...user, ...profileRes.data });
-          toast.success('Profile photo updated!');
-        }
+        await db.users.update(user.id, { avatar_url: base64Img });
+        setUser({ ...user, avatar_url: base64Img });
+        toast.success('Profile photo updated!');
+      } catch (err) {
+        toast.error('Failed to update photo');
+        setAvatarPreview(null);
+      } finally {
+        setUploading(false);
       }
-    } catch (err) {
-      toast.error('Failed to upload image');
-      setAvatarPreview(null);
-    } finally {
-      setUploading(false);
-    }
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.put('/auth/profile', formData);
-      if (data.success) {
-        toast.success('Profile updated successfully');
-        setUser({ ...user, ...data.data });
-        setFormData({ ...formData, password: '' });
-        setIsEditing(false);
+      const updates = {
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+      };
+      if (formData.password) {
+        updates.password = formData.password;
       }
+      
+      await db.users.update(user.id, updates);
+      
+      toast.success('Profile updated successfully');
+      setUser({ ...user, ...updates });
+      setFormData({ ...formData, password: '' });
+      setIsEditing(false);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error('Failed to update profile');
     }
   };
 

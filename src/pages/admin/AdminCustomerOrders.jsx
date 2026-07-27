@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { HiX, HiOutlineEye, HiOutlineArrowLeft, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import EditOrderModal from '../../components/shared/EditOrderModal';
 import OrderDetailsModal from '../../components/shared/OrderDetailsModal';
 import ConfirmModal from '../../components/shared/ConfirmModal';
@@ -16,15 +16,31 @@ const AdminCustomerOrders = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState({ isOpen: false, idToDelete: null });
 
+  useEffect(() => {
+    fetchCustomerData();
+  }, []);
+
   const fetchCustomerData = async () => {
     if (!customer?.mobile) return;
     try {
-      const { data } = await api.get(`/admin/customers?search=${encodeURIComponent(customer.mobile)}`);
-      if (data.success && data.data?.customers) {
-        const updatedCustomer = data.data.customers.find(c => c.id === customer.id);
-        if (updatedCustomer) {
-          setCustomer(updatedCustomer);
-        }
+      const c = await db.users.where({ mobile: customer.mobile }).first();
+      if (c) {
+        let userOrders = await db.orders.filter(o => Number(o.user_id) === Number(c.id)).toArray();
+        userOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        
+        userOrders = await Promise.all(userOrders.map(async (o) => {
+          const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
+          const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+          return {
+            ...o,
+            order_items: orderItems,
+            eye_prescriptions: prescriptions
+          };
+        }));
+
+        c.orders = userOrders;
+        c.orders_count = userOrders.length;
+        setCustomer(c);
       }
     } catch (err) {
       console.error('Failed to fetch updated customer data', err);
@@ -37,7 +53,15 @@ const AdminCustomerOrders = () => {
 
   const deleteOrder = async () => {
     try {
-      await api.delete(`/orders/${confirmModalData.idToDelete}`);
+      const orderId = Number(confirmModalData.idToDelete);
+      if (isNaN(orderId)) throw new Error('Invalid Order ID');
+      
+      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+        await db.orders.delete(orderId);
+        await db.order_items.where({ order_id: orderId }).delete();
+        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.reminders_log.where({ order_id: orderId }).delete();
+      });
       toast.success('Order deleted successfully');
       fetchCustomerData();
     } catch (err) {
@@ -132,14 +156,14 @@ const AdminCustomerOrders = () => {
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setIsEditing(true); }} 
-                          className="p-2 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="p-2 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
                           title="Edit Order"
                         >
                           <HiOutlinePencil className="w-4 h-4 mx-auto" />
                         </button>
                         <button 
                           onClick={(e) => { e.stopPropagation(); confirmDelete(order.id); }} 
-                          className="p-2 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] opacity-0 group-hover:opacity-100 focus:opacity-100"
+                          className="p-2 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
                           title="Delete Order"
                         >
                           <HiOutlineTrash className="w-4 h-4 mx-auto" />

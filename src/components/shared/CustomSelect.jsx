@@ -7,7 +7,8 @@ const CustomSelect = ({
   onChange, 
   name, 
   placeholder = "Select an option", 
-  className = "" 
+  className = "",
+  direction = "down"
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
@@ -43,7 +44,7 @@ const CustomSelect = ({
       </button>
 
       {isOpen && (
-        <div className="absolute z-50 w-full mt-2 bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-[var(--shadow-card)] overflow-hidden animate-fade-in-up">
+        <div className={`absolute z-50 w-full ${direction === 'up' ? 'bottom-full mb-2' : 'mt-2'} bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-lg shadow-[var(--shadow-card)] overflow-hidden animate-fade-in-up`}>
           <ul className="max-h-60 overflow-y-auto custom-scrollbar">
             {options.map((option) => (
               <li key={option.value}>

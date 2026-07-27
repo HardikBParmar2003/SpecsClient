@@ -21,7 +21,7 @@ const LoginPage = () => {
         if (res.data?.user?.role === 'admin') {
           navigate('/admin');
         } else {
-          navigate('/admin'); // Fallback in case user object isn't fully propagated in response
+          navigate('/'); 
         }
       } else {
         toast.error(res.message);

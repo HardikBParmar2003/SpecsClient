@@ -1,7 +1,7 @@
 import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { db } from '../services/db';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 
 const ProfilePage = () => {
@@ -32,14 +32,21 @@ const ProfilePage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.put('/auth/profile', formData);
-      if (data.success) {
-        toast.success('Profile updated successfully');
-        setUser({ ...user, ...data.data }); // refresh user context
-        setFormData({ ...formData, password: '' }); // clear password field
+      const updates = {
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+      };
+      if (formData.password) {
+        updates.password = formData.password;
       }
+      await db.users.update(user.id, updates);
+      
+      toast.success('Profile updated successfully');
+      setUser({ ...user, ...updates });
+      setFormData({ ...formData, password: '' });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error('Failed to update profile');
     }
   };
 

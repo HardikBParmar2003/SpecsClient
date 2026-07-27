@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import { HiOutlineMail } from 'react-icons/hi';
 import { shopConfig } from '../../config/shop';
@@ -15,10 +15,30 @@ const AdminReminders = () => {
 
   const fetchReminders = async () => {
     try {
-      const { data } = await api.get('/reminders/due');
-      if (data.success) {
-        setReminders(data.data.reminders || []);
+      const today = new Date();
+      // Dexie doesn't natively index all fields automatically if we didn't add it in schema, but we did add reminder_date to orders index.
+      const allOrders = await db.orders.where('reminder_date').belowOrEqual(today).toArray();
+
+      const dueReminders = [];
+      for (const order of allOrders) {
+        if (!order.reminder_date) continue;
+        
+        const logs = await db.reminders_log.where({ order_id: order.id }).toArray();
+        if (logs.length > 0) continue; // Already sent
+
+        const user = await db.users.get(order.user_id);
+        if (user && user.mobile) {
+          dueReminders.push({
+            order_id: order.id,
+            name: user.name,
+            mobile: user.mobile,
+            order_date: order.created_at,
+            reminder_date: order.reminder_date
+          });
+        }
       }
+
+      setReminders(dueReminders);
     } catch (error) {
       toast.error('Failed to load reminders');
     } finally {
@@ -28,11 +48,14 @@ const AdminReminders = () => {
 
   const sendReminder = async (id) => {
     try {
-      const { data } = await api.put(`/reminders/${id}/send`);
-      if (data.success) {
-        toast.success('Reminder marked as sent!');
-        fetchReminders(); // refresh
-      }
+      await db.reminders_log.add({
+        order_id: Number(id),
+        sent_date: new Date(),
+        status: 'sent',
+        message: 'Reminder marked manually'
+      });
+      toast.success('Reminder marked as sent!');
+      fetchReminders(); // refresh
     } catch (error) {
       toast.error('Failed to update reminder');
     }

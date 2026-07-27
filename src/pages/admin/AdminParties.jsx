@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
-import { HiOutlinePlus, HiOutlineOfficeBuilding, HiOutlinePencil, HiOutlineX } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlineOfficeBuilding, HiOutlinePencil, HiOutlineX, HiOutlineTrash } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import toast from 'react-hot-toast';
 import CustomPagination from '../../components/shared/CustomPagination';
+import ConfirmModal from '../../components/shared/ConfirmModal';
 
 const AdminParties = () => {
   const [parties, setParties] = useState([]);
@@ -12,6 +13,7 @@ const AdminParties = () => {
   const [isEditPartyModalOpen, setIsEditPartyModalOpen] = useState(false);
   const [isViewPartyModalOpen, setIsViewPartyModalOpen] = useState(false);
   const [selectedParty, setSelectedParty] = useState(null);
+  const [confirmModalData, setConfirmModalData] = useState({ isOpen: false, idToDelete: null });
   
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -22,10 +24,19 @@ const AdminParties = () => {
   const fetchParties = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get('/parties');
-      if (data.success) {
-        setParties(data.data);
-      }
+      const allParties = await db.parties.toArray();
+      const partiesWithStats = await Promise.all(allParties.map(async (party) => {
+        const purchases = await db.purchases.where({ party_id: party.id }).toArray();
+        const total_cost = purchases.reduce((sum, p) => sum + (parseFloat(p.total_amount) || 0), 0);
+        const total_paid = purchases.reduce((sum, p) => sum + (parseFloat(p.paid_amount) || 0), 0);
+        return {
+          ...party,
+          total_cost,
+          total_paid,
+          due_balance: total_cost - total_paid
+        };
+      }));
+      setParties(partiesWithStats);
     } catch (err) {
       toast.error('Failed to load parties');
     } finally {
@@ -40,13 +51,17 @@ const AdminParties = () => {
   const handleAddParty = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.post('/parties', newParty);
-      if (data.success) {
-        toast.success('Party added successfully');
-        setIsAddPartyModalOpen(false);
-        setNewParty({ name: '', phone: '', address: '' });
-        fetchParties();
-      }
+      await db.parties.add({
+        name: newParty.name,
+        phone: newParty.phone,
+        address: newParty.address,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      toast.success('Party added successfully');
+      setIsAddPartyModalOpen(false);
+      setNewParty({ name: '', phone: '', address: '' });
+      fetchParties();
     } catch (err) {
       toast.error('Failed to add party');
     }
@@ -55,14 +70,30 @@ const AdminParties = () => {
   const handleEditParty = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.put(`/parties/${selectedParty.id}`, selectedParty);
-      if (data.success) {
-        toast.success('Party updated successfully');
-        setIsEditPartyModalOpen(false);
-        fetchParties();
-      }
+      await db.parties.update(selectedParty.id, {
+        name: selectedParty.name,
+        phone: selectedParty.phone,
+        address: selectedParty.address,
+        updated_at: new Date()
+      });
+      toast.success('Party updated successfully');
+      setIsEditPartyModalOpen(false);
+      fetchParties();
     } catch (err) {
       toast.error('Failed to update party');
+    }
+  };
+
+  const handleDeleteParty = async () => {
+    try {
+      await db.parties.delete(confirmModalData.idToDelete);
+      await db.purchases.where({ party_id: confirmModalData.idToDelete }).delete(); // Cascade delete purchases
+      toast.success('Party deleted successfully');
+      setConfirmModalData({ isOpen: false, idToDelete: null });
+      if (selectedParty?.id === confirmModalData.idToDelete) setIsViewPartyModalOpen(false);
+      fetchParties();
+    } catch (err) {
+      toast.error('Failed to delete party');
     }
   };
 
@@ -108,7 +139,7 @@ const AdminParties = () => {
                   <tr 
                     key={party.id} 
                     onClick={() => { setSelectedParty(party); setIsViewPartyModalOpen(true); }}
-                    className="hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer"
+                    className="hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4 font-medium text-[var(--text-primary)]">
                       <div className="flex items-center gap-2">
@@ -124,12 +155,26 @@ const AdminParties = () => {
                     <td className="px-6 py-4 text-sm text-green-400 text-center">₹{Number(party.total_paid || 0).toFixed(2)}</td>
                     <td className="px-6 py-4 text-sm font-bold text-red-400 text-center">₹{Number(party.due_balance || 0).toFixed(2)}</td>
                     <td className="px-6 py-4" onClick={(e) => e.stopPropagation()}>
-                      <div className="flex justify-center">
+                      <div className="flex justify-center items-center gap-2">
                         <button 
                           onClick={() => navigate(`/admin/parties/${party.id}/purchases`)}
-                          className="text-luxury-gold hover:text-[var(--bg-primary)] hover:bg-luxury-gold transition-colors text-xs uppercase tracking-wider font-semibold flex items-center gap-1 cursor-pointer bg-luxury-gold/10 px-3 py-1.5 rounded-md border border-luxury-gold/30"
+                          className="text-luxury-gold hover:text-[var(--bg-primary)] hover:bg-luxury-gold transition-colors text-xs uppercase tracking-wider font-semibold flex items-center gap-1 cursor-pointer bg-luxury-gold/10 px-3 py-1.5 rounded-md border border-luxury-gold/30 mr-2"
                         >
                           Purchases
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedParty(party); setIsEditPartyModalOpen(true); }} 
+                          className="p-2 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                          title="Edit Party"
+                        >
+                          <HiOutlinePencil className="w-4 h-4 mx-auto" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setConfirmModalData({ isOpen: true, idToDelete: party.id }); }} 
+                          className="p-2 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                          title="Delete Party"
+                        >
+                          <HiOutlineTrash className="w-4 h-4 mx-auto" />
                         </button>
                       </div>
                     </td>
@@ -154,22 +199,31 @@ const AdminParties = () => {
       {isViewPartyModalOpen && selectedParty && (
         <div className="fixed inset-0 bg-[var(--bg-primary)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl w-full max-w-3xl overflow-hidden shadow-[var(--shadow-card)] flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
-              <div>
-                <h2 className="text-lg uppercase tracking-widest text-luxury-gold">Party Details</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)] relative">
+              <div className="pr-10">
+                <h2 className="text-lg uppercase tracking-widest text-luxury-gold leading-tight">Party Details</h2>
                 <p className="text-sm text-[var(--text-muted)] mt-1">Information and balance summary</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <button 
                   onClick={() => { setIsViewPartyModalOpen(false); setIsEditPartyModalOpen(true); }} 
-                  className="text-luxury-gold hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-luxury-gold/10 px-3 py-1.5 rounded-md"
+                  className="flex-1 sm:flex-none justify-center text-luxury-gold hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-luxury-gold/10 px-3 py-2 rounded-md"
                 >
                   <HiOutlinePencil className="w-4 h-4" /> Edit
                 </button>
-                <button onClick={() => setIsViewPartyModalOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
-                  <HiOutlineX className="w-6 h-6" />
+                <button 
+                  onClick={() => setConfirmModalData({ isOpen: true, idToDelete: selectedParty.id })}
+                  className="flex-1 sm:flex-none justify-center text-red-400 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-red-400/10 hover:bg-red-500 px-3 py-2 rounded-md"
+                >
+                  <HiOutlineTrash className="w-4 h-4" /> Delete
                 </button>
               </div>
+              <button 
+                onClick={() => setIsViewPartyModalOpen(false)} 
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 text-[var(--text-muted)] hover:text-red-400 transition-colors cursor-pointer bg-[var(--bg-primary)] sm:bg-transparent rounded-full p-1 sm:p-0 z-10"
+              >
+                <HiOutlineX className="w-6 h-6 sm:w-6 sm:h-6" />
+              </button>
             </div>
             
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--bg-primary)]">
@@ -297,6 +351,14 @@ const AdminParties = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModalData.isOpen}
+        onClose={() => setConfirmModalData({ isOpen: false, idToDelete: null })}
+        onConfirm={handleDeleteParty}
+        title="Delete Party"
+        message="Are you sure you want to delete this party? This will also delete all purchases associated with this party. This action cannot be undone."
+      />
     </div>
   );
 };

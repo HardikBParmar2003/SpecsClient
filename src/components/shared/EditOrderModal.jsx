@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { HiX, HiOutlineSave } from 'react-icons/hi';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import { toast } from 'react-hot-toast';
 import PrescriptionForm from './PrescriptionForm';
 import CustomSelect from './CustomSelect';
@@ -13,6 +13,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
     glass_price: order.glass_price || 0,
     discount: order.discount || 0,
     advance: order.advance || 0,
+    advance_online: order.advance_online || 0,
     bill_number: order.bill_number || ''
   });
 
@@ -34,6 +35,8 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   const glassPriceVal = parseFloat(formData.glass_price) || 0;
   const discountVal = parseFloat(formData.discount) || 0;
   const advanceVal = parseFloat(formData.advance) || 0;
+  const advanceOnlineVal = parseFloat(formData.advance_online) || 0;
+  const totalAdvance = advanceVal + advanceOnlineVal;
 
   const manualSubtotal = (framePriceVal > 0 || glassPriceVal > 0) ? (framePriceVal + glassPriceVal) : (() => {
     if (orderItems && orderItems.length > 0) {
@@ -43,7 +46,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   })();
 
   const calculatedTotal = manualSubtotal - discountVal;
-  const balance = Math.max(0, calculatedTotal - advanceVal);
+  const balance = Math.max(0, calculatedTotal - totalAdvance);
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...orderItems];
@@ -52,8 +55,8 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   };
 
   const handleSave = async () => {
-    if (advanceVal > calculatedTotal) {
-      toast.error("Advance amount cannot be greater than the Final Total.");
+    if (totalAdvance > calculatedTotal) {
+      toast.error("Total advance amount cannot be greater than the Final Total.");
       return;
     }
     setIsSaving(true);
@@ -63,26 +66,54 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
         itemsToSave[0].unit_price = manualSubtotal;
       }
 
-      const payload = {
-        ...formData,
+      const orderId = Number(order.id);
+      const realOrder = await db.orders.get(orderId);
+      
+      await db.orders.update(orderId, {
+        status: formData.status,
+        pay_status: formData.pay_status,
         frame_price: framePriceVal,
         glass_price: glassPriceVal,
         discount: discountVal,
         advance: advanceVal,
-        amount: calculatedTotal,
+        advance_online: advanceOnlineVal,
+        total_price: calculatedTotal,
         bill_number: formData.bill_number,
-        order_items: itemsToSave,
-        eye_prescriptions: prescriptions
-      };
-      
-      const { data } = await api.put(`/orders/${order.id}`, payload);
-      if (data.success) {
-        toast.success('Order updated successfully!');
-        onUpdate();
-        onClose();
+        updated_at: new Date()
+      });
+
+      // Overwrite items
+      await db.order_items.where({ order_id: orderId }).delete();
+      for(const item of itemsToSave) {
+        await db.order_items.add({
+          order_id: orderId,
+          custom_frame_name: item.custom_frame_name,
+          glass_type: item.glass_type,
+          unit_price: item.unit_price,
+          quantity: item.quantity || 1,
+          created_at: new Date()
+        });
       }
+
+      // Overwrite prescriptions
+      await db.eye_prescriptions.where({ order_id: orderId }).delete();
+      for (const p of prescriptions) {
+        if (p.od_sphere || p.os_sphere) {
+          await db.eye_prescriptions.add({
+            user_id: realOrder.user_id,
+            order_id: orderId,
+            ...p,
+            prescription_date: new Date(),
+            created_at: new Date()
+          });
+        }
+      }
+
+      toast.success('Order updated successfully!');
+      onUpdate();
+      onClose();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to update order');
+      toast.error('Failed to update order');
     } finally {
       setIsSaving(false);
     }
@@ -92,10 +123,17 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
     <div className="fixed inset-0 bg-[var(--bg-primary)] z-50 flex flex-col overflow-hidden">
       <div className="w-full h-full flex flex-col">
         <div className="flex justify-between items-center p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
-          <div>
-            <h2 className="text-lg uppercase tracking-widest text-luxury-gold">
-              Edit Order {order.bill_number && <span className="text-[var(--text-muted)] ml-2 border-l border-[var(--border-color)] pl-2">Bill No: {order.bill_number}</span>}
-            </h2>
+          <div className="pr-4">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2">
+              <h2 className="text-lg uppercase tracking-widest text-luxury-gold leading-tight">
+                Edit Order
+              </h2>
+              {order.bill_number && (
+                <span className="text-[var(--text-muted)] text-sm sm:border-l sm:border-[var(--border-color)] sm:pl-2">
+                  Bill No: <span className="font-medium whitespace-nowrap">{order.bill_number}</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs text-[var(--text-muted)] mt-1">Make corrections to order details</p>
           </div>
           <div className="flex gap-3">
@@ -260,15 +298,24 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (₹)</label>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Offline) (₹)</label>
                     <input 
                       type="number" 
                       value={formData.advance} 
                       onChange={(e) => setFormData({...formData, advance: e.target.value})}
-                      className={`w-full bg-[var(--input-bg)] border rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none transition-colors ${advanceVal > calculatedTotal ? 'border-red-500 focus:border-red-500' : 'border-[var(--border-color)] focus:border-luxury-gold'}`}
+                      className={`w-full bg-[var(--input-bg)] border rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none transition-colors ${totalAdvance > calculatedTotal ? 'border-red-500 focus:border-red-500' : 'border-[var(--border-color)] focus:border-luxury-gold'}`}
                     />
-                    {advanceVal > calculatedTotal && <p className="text-red-500 text-xs mt-1">Advance exceeds final total!</p>}
                   </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Online) (₹)</label>
+                    <input 
+                      type="number" 
+                      value={formData.advance_online} 
+                      onChange={(e) => setFormData({...formData, advance_online: e.target.value})}
+                      className={`w-full bg-[var(--input-bg)] border rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none transition-colors ${totalAdvance > calculatedTotal ? 'border-red-500 focus:border-red-500' : 'border-[var(--border-color)] focus:border-luxury-gold'}`}
+                    />
+                  </div>
+                  {totalAdvance > calculatedTotal && <p className="text-red-500 text-xs mt-1">Total advance exceeds final total!</p>}
                 </div>
 
                 <div className="pt-5 border-t border-[var(--border-color)]">

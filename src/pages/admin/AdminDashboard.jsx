@@ -1,25 +1,131 @@
-import { useState, useEffect } from 'react';
-import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiOutlineBell, HiOutlineEye, HiX, HiTrendingUp, HiTrendingDown, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
+import { useState, useEffect, useRef } from 'react';
+import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiOutlineBell, HiOutlineEye, HiX, HiTrendingUp, HiTrendingDown, HiOutlinePencil, HiOutlineTrash, HiOutlineDownload, HiOutlineUpload } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
+import { exportDB, importInto } from 'dexie-export-import';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import EditOrderModal from '../../components/shared/EditOrderModal';
 import OrderDetailsModal from '../../components/shared/OrderDetailsModal';
 import ConfirmModal from '../../components/shared/ConfirmModal';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, pendingReminders: 0, changes: { customers: '+0.00%', orders: '+0.00%', revenue: '+0.00%', pendingReminders: '+0.00%' } });
+  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, revenueOffline: 0, revenueOnline: 0, pendingReminders: 0, changes: { customers: '+0.00%', orders: '+0.00%', revenue: '+0.00%', pendingReminders: '+0.00%' } });
   const [recentOrders, setRecentOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [confirmModalData, setConfirmModalData] = useState({ isOpen: false, idToDelete: null });
+  const fileInputRef = useRef(null);
+
+  const handleBackup = async () => {
+    try {
+      toast.loading('Generating backup...', { id: 'backup' });
+      const blob = await exportDB(db);
+      const reader = new FileReader();
+      reader.readAsDataURL(blob);
+      reader.onloadend = async () => {
+        try {
+          const base64data = reader.result.split(',')[1];
+          const fileName = `city_palace_backup_${new Date().toISOString().split('T')[0]}.json`;
+          
+          const savedFile = await Filesystem.writeFile({
+            path: fileName,
+            data: base64data,
+            directory: Directory.Cache
+          });
+          
+          await Share.share({
+            title: 'Database Backup',
+            url: savedFile.uri,
+            dialogTitle: 'Save or Share Backup'
+          });
+          
+          toast.success('Backup ready to save or share!', { id: 'backup', duration: 4000 });
+        } catch (shareErr) {
+          console.error(shareErr);
+          toast.error('Failed to share backup', { id: 'backup' });
+        }
+      };
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to generate backup', { id: 'backup' });
+    }
+  };
+
+  const handleRestore = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (window.confirm("WARNING: Restoring will overwrite all current data. Are you sure you want to proceed?")) {
+      try {
+        toast.loading('Restoring database...', { id: 'restore' });
+        await importInto(db, file, { 
+          clearTablesBeforeImport: true, 
+          acceptVersionDiff: true, 
+          acceptNameDiff: true, 
+          acceptMissingTables: true 
+        });
+        toast.success('Database restored successfully!', { id: 'restore' });
+        fetchDashboard();
+      } catch (error) {
+        console.error(error);
+        toast.error('Failed to restore database', { id: 'restore' });
+      }
+    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
 
   const fetchDashboard = async () => {
     try {
-      const { data } = await api.get('/admin/dashboard');
-      if (data.success) {
-        setStats(data.data.stats);
-        setRecentOrders(data.data.recentOrders);
-      }
+      const now = new Date();
+      const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+
+      const allUsers = await db.users.toArray();
+      const todayUsers = allUsers.filter(u => {
+        const d = new Date(u.created_at);
+        return d >= startOfDay && d <= endOfDay && (!u.role || u.role === 'customer');
+      });
+      const customersCount = todayUsers.length;
+
+      const allOrders = await db.orders.toArray();
+      const todayOrders = allOrders.filter(o => {
+        const d = new Date(o.created_at);
+        return d >= startOfDay && d <= endOfDay;
+      });
+      const revenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0);
+      const revenueOffline = todayOrders.reduce((sum, o) => sum + (parseFloat(o.advance) || 0), 0);
+      const revenueOnline = todayOrders.reduce((sum, o) => sum + (parseFloat(o.advance_online) || 0), 0);
+      
+      const statsObj = {
+        customers: customersCount,
+        orders: todayOrders.length,
+        revenue: revenue,
+        revenueOffline: revenueOffline,
+        revenueOnline: revenueOnline,
+        pendingReminders: 0,
+        changes: { customers: '+0%', orders: '+0%', revenue: '+0%' }
+      };
+      
+      todayOrders.sort((a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0));
+      const recent = todayOrders.slice(0, 10);
+      
+      const mappedRecent = await Promise.all(recent.map(async (o) => {
+        const u = allUsers.find(u => u.id === o.user_id);
+        const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
+        const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+        return {
+          ...o,
+          customerName: u ? u.name : 'Unknown',
+          customerMobile: u ? u.mobile : '',
+          amount: parseFloat(o.total_price) || 0,
+          order_items: orderItems,
+          eye_prescriptions: prescriptions
+        };
+      }));
+
+      setStats(statsObj);
+      setRecentOrders(mappedRecent);
     } catch (err) {
       console.error('Failed to fetch dashboard', err);
     }
@@ -31,7 +137,16 @@ const AdminDashboard = () => {
 
   const deleteOrder = async () => {
     try {
-      await api.delete(`/orders/${confirmModalData.idToDelete}`);
+      const orderId = Number(confirmModalData.idToDelete);
+      if (isNaN(orderId)) throw new Error('Invalid Order ID');
+      
+      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+        await db.orders.delete(orderId);
+        await db.order_items.where({ order_id: orderId }).delete();
+        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.reminders_log.where({ order_id: orderId }).delete();
+      });
+
       toast.success('Order deleted successfully');
       fetchDashboard();
     } catch (err) {
@@ -46,10 +161,9 @@ const AdminDashboard = () => {
   }, []);
 
   const statCards = [
-    { name: 'Total Customers', value: stats.customers, icon: HiOutlineUsers, change: stats.changes?.customers || '+0.00%' },
-    { name: 'Total Orders', value: stats.orders, icon: HiOutlineShoppingBag, change: stats.changes?.orders || '+0.00%' },
-    { name: 'Revenue', value: `₹${stats.revenue?.toLocaleString() || 0}`, icon: HiOutlineCurrencyRupee, change: stats.changes?.revenue || '+0.00%' },
-    // { name: 'Pending Reminders', value: stats.pendingReminders, icon: HiOutlineBell, change: stats.changes?.pendingReminders || '+0.00%' },
+    { name: "Today's Customers", value: stats.customers, icon: HiOutlineUsers, change: stats.changes?.customers || '+0.00%' },
+    { name: "Today's Orders", value: stats.orders, icon: HiOutlineShoppingBag, change: stats.changes?.orders || '+0.00%' },
+    { name: "Today's Revenue", value: `₹${stats.revenue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`, icon: HiOutlineCurrencyRupee, change: stats.changes?.revenue || '+0.00%', offline: stats.revenueOffline || 0, online: stats.revenueOnline || 0 },
   ];
 
   return (
@@ -68,21 +182,55 @@ const AdminDashboard = () => {
                 <stat.icon className="w-6 h-6 text-luxury-gold" />
               </div>
             </div>
-            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--border-color)]">
-              <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold tracking-wider ${
-                stat.change.startsWith('+') 
-                  ? 'bg-green-500/10 text-green-500 border border-green-500/20' 
-                  : stat.change.startsWith('-')
-                    ? 'bg-red-500/10 text-red-500 border border-red-500/20'
-                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-color)]'
-              }`}>
-                {stat.change.startsWith('+') ? <HiTrendingUp className="w-3 h-3" /> : stat.change.startsWith('-') ? <HiTrendingDown className="w-3 h-3" /> : null}
-                {stat.change.replace(/[+-]/, '')}
+            
+            {stat.offline !== undefined && stat.online !== undefined && (
+              <div className="flex justify-between items-center mt-3 mb-2">
+                <div className="text-base text-[var(--text-secondary)]">
+                  <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Offline: </span> 
+                  <span className="text-luxury-gold font-semibold text-lg">₹{stat.offline.toFixed(2)}</span>
+                </div>
+                <div className="text-base text-[var(--text-secondary)]">
+                  <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Online: </span> 
+                  <span className="text-luxury-gold font-semibold text-lg">₹{stat.online.toFixed(2)}</span>
+                </div>
               </div>
-              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">vs last month</span>
+            )}
+
+            <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--border-color)]">
+              <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Data for Today only</span>
             </div>
           </div>
         ))}
+      </div>
+
+      {/* Data Management Section */}
+      <div className="glassmorphism rounded-xl border border-[var(--border-color)] p-6 mb-12 flex flex-col md:flex-row justify-between items-center gap-4 bg-[var(--bg-card)]">
+        <div>
+          <h2 className="text-sm font-semibold tracking-widest uppercase text-luxury-gold">Data Management</h2>
+          <p className="text-xs text-[var(--text-muted)] mt-1">Backup your shop data securely or restore from a previous backup file.</p>
+        </div>
+        <div className="flex gap-4 w-full md:w-auto">
+          <button 
+            onClick={handleBackup}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] uppercase tracking-widest text-xs font-semibold px-4 py-3 rounded hover:bg-luxury-gold hover:text-[var(--bg-primary)] transition-colors"
+          >
+            <HiOutlineDownload className="w-4 h-4" /> Backup Data
+          </button>
+          
+          <input 
+            type="file" 
+            accept=".json" 
+            ref={fileInputRef} 
+            onChange={handleRestore} 
+            className="hidden" 
+          />
+          <button 
+            onClick={() => fileInputRef.current?.click()}
+            className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-luxury-gold text-black uppercase tracking-widest text-xs font-semibold px-4 py-3 rounded hover:bg-[var(--text-primary)] hover:text-[var(--bg-primary)] transition-colors shadow-[0_0_10px_rgba(212,175,55,0.3)]"
+          >
+            <HiOutlineUpload className="w-4 h-4" /> Restore Data
+          </button>
+        </div>
       </div>
 
       <div className="glassmorphism rounded-xl border border-[var(--border-color)] overflow-hidden relative">

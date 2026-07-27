@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { HiOutlineEye, HiX, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import CustomDatePicker from '../../components/shared/CustomDatePicker';
 import CustomPagination from '../../components/shared/CustomPagination';
 import EditOrderModal from '../../components/shared/EditOrderModal';
@@ -23,19 +23,34 @@ const AdminOrders = () => {
   const fetchOrders = async () => {
     setIsLoading(true);
     try {
-      const params = { page, limit, _t: Date.now() };
-      if (startDate) params.startDate = startDate;
-      if (endDate) params.endDate = endDate;
+      let allOrders = await db.orders.toArray();
+      allOrders.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      const { data } = await api.get('/orders', { params });
-      if (data.success) {
-        setOrders(data.data.orders.map(o => ({
+      if (startDate) {
+        const start = new Date(startDate).getTime();
+        allOrders = allOrders.filter(o => new Date(o.created_at).getTime() >= start);
+      }
+      if (endDate) {
+        const end = new Date(endDate).getTime() + 86400000; // include full day
+        allOrders = allOrders.filter(o => new Date(o.created_at).getTime() <= end);
+      }
+
+      setTotalPages(Math.ceil(allOrders.length / limit) || 1);
+      const paginatedOrders = allOrders.slice((page - 1) * limit, page * limit);
+
+      const mappedOrders = await Promise.all(paginatedOrders.map(async (o) => {
+        const user = await db.users.get(o.user_id);
+        const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
+        const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+        
+        return {
           id: o.id.toString(),
-          customerName: o.customer_name,
-          mobile: o.customer_mobile,
+          customerName: user ? user.name : 'Unknown',
+          mobile: user ? user.mobile : '',
           type: o.ord_type,
           amount: o.total_price,
           advance: o.advance,
+          advance_online: o.advance_online,
           status: o.status,
           pay_method: o.pay_method,
           pay_status: o.pay_status,
@@ -44,11 +59,11 @@ const AdminOrders = () => {
           frame_price: o.frame_price,
           glass_price: o.glass_price,
           bill_number: o.bill_number,
-          order_items: o.order_items,
-          eye_prescriptions: o.eye_prescriptions
-        })));
-        setTotalPages(data.data.pagination.totalPages);
-      }
+          order_items: orderItems,
+          eye_prescriptions: prescriptions
+        };
+      }));
+      setOrders(mappedOrders);
     } catch (err) {
       console.error('Failed to fetch orders', err);
     } finally {
@@ -71,7 +86,15 @@ const AdminOrders = () => {
 
   const deleteOrder = async () => {
     try {
-      await api.delete(`/orders/${confirmModalData.idToDelete}`);
+      const orderId = Number(confirmModalData.idToDelete);
+      if (isNaN(orderId)) throw new Error('Invalid Order ID');
+      
+      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+        await db.orders.delete(orderId);
+        await db.order_items.where({ order_id: orderId }).delete();
+        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.reminders_log.where({ order_id: orderId }).delete();
+      });
       toast.success('Order deleted successfully');
       fetchOrders();
     } catch (err) {
@@ -96,10 +119,14 @@ const AdminOrders = () => {
           <div className="flex items-center gap-4">
             <h2 className="text-sm font-semibold tracking-widest uppercase text-[var(--text-secondary)]">Order Directory</h2>
           </div>
-          <div className="flex flex-col sm:flex-row items-center gap-3">
-            <CustomDatePicker label="From" value={startDate} onChange={setStartDate} />
+          <div className="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto mt-4 md:mt-0">
+            <div className="w-full sm:w-auto">
+              <CustomDatePicker label="From" value={startDate} onChange={setStartDate} />
+            </div>
             <span className="text-[var(--text-muted)] text-xs uppercase tracking-widest hidden sm:block">to</span>
-            <CustomDatePicker label="To" value={endDate} onChange={setEndDate} />
+            <div className="w-full sm:w-auto">
+              <CustomDatePicker label="To" value={endDate} onChange={setEndDate} />
+            </div>
           </div>
         </div>
 

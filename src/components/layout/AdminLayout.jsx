@@ -2,7 +2,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
-import { HiOutlineHome, HiOutlineUserGroup, HiOutlineViewGrid, HiOutlineBell, HiLogout, HiOutlineExternalLink, HiMenu, HiX, HiOutlineSun, HiOutlineMoon, HiOutlineShoppingBag } from 'react-icons/hi';
+import { HiOutlineHome, HiOutlineUserGroup, HiOutlineViewGrid, HiOutlineBell, HiLogout, HiOutlineExternalLink, HiMenu, HiX, HiOutlineSun, HiOutlineMoon, HiOutlineShoppingBag, HiOutlineCurrencyRupee } from 'react-icons/hi';
 import { shopConfig } from '../../config/shop.js';
 
 const AdminLayout = ({ children }) => {
@@ -67,6 +67,14 @@ const AdminLayout = ({ children }) => {
             <Link to="/admin/reminders" onClick={closeSidebar} className={getLinkClasses('/admin/reminders')}>
               <HiOutlineBell className="h-5 w-5" />
               <span>Reminders</span>
+            </Link>
+            <Link to="/admin/revenue" onClick={closeSidebar} className={getLinkClasses('/admin/revenue')}>
+              <HiOutlineCurrencyRupee className="h-5 w-5" />
+              <span>My Revenue</span>
+            </Link>
+            <Link to="/admin/expenses" onClick={closeSidebar} className={getLinkClasses('/admin/expenses')}>
+              <HiOutlineCurrencyRupee className="h-5 w-5" />
+              <span>My Expenses</span>
             </Link>
           </nav>
         </div>

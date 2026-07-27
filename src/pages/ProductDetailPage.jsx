@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { db } from '../services/db';
 import { AuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import PrescriptionForm from '../components/shared/PrescriptionForm';
@@ -28,9 +28,8 @@ const ProductDetailPage = () => {
     const fetchProductAndSimilar = async () => {
       setLoading(true);
       try {
-        const { data } = await api.get(`/products/${id}`);
-        if (data.success) {
-          const p = data.data;
+        const p = await db.products.get(Number(id));
+        if (p) {
           setProduct(p);
           
           // Determine colors from image_gallery JSON array of objects
@@ -43,10 +42,10 @@ const ProductDetailPage = () => {
           }
 
           // Fetch similar products based on brand
-          const similarRes = await api.get(`/products?brand=${p.brand}&limit=4`);
-          if (similarRes.data.success) {
-            setSimilarProducts(similarRes.data.data.products.filter(item => item.id !== p.id).slice(0, 3));
-          }
+          const similarProductsData = await db.products.where({ brand: p.brand }).limit(4).toArray();
+          setSimilarProducts(similarProductsData.filter(item => item.id !== p.id).slice(0, 3));
+        } else {
+          toast.error("Product not found");
         }
       } catch (error) {
         toast.error("Failed to load product details");
@@ -68,11 +67,18 @@ const ProductDetailPage = () => {
     }
     
     try {
-      const payload = {
-        product_id: product.id,
-        quantity,
-      };
-      await api.post('/cart', payload);
+      const existingCartItem = await db.cart_items.where('[user_id+product_id]').equals([user.id, product.id]).first();
+      
+      if (existingCartItem) {
+        await db.cart_items.update(existingCartItem.id, { quantity: existingCartItem.quantity + quantity });
+      } else {
+        await db.cart_items.add({
+          user_id: user.id,
+          product_id: product.id,
+          quantity,
+          created_at: new Date()
+        });
+      }
       toast.success(`${product.name} added to cart!`, {
         style: {
           background: 'var(--bg-card)',

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../services/api';
+import { db } from '../services/db';
 import ProductCard from '../components/shared/ProductCard';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import CustomSelect from '../components/shared/CustomSelect';
@@ -26,10 +26,8 @@ const ProductsPage = () => {
   const fetchProducts = async () => {
     setLoading(true);
     try {
-      const { data } = await api.get('/products');
-      if (data.success) {
-        setProducts(data.data.products || []);
-      }
+      const allProducts = await db.products.toArray();
+      setProducts(allProducts || []);
     } catch (err) {
       console.error('Failed to load products');
     } finally {

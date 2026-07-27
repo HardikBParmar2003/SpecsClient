@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { HiOutlineSearch, HiOutlinePlus, HiOutlinePencil, HiOutlineTrash, HiX, HiOutlinePhotograph, HiOutlineCamera } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import ConfirmModal from '../../components/shared/ConfirmModal';
 import CustomPagination from '../../components/shared/CustomPagination';
 
@@ -25,10 +25,8 @@ const AdminProducts = () => {
 
   const fetchProducts = async () => {
     try {
-      const { data } = await api.get('/products');
-      if (data.success) {
-        setProducts(data.data.products);
-      }
+      const allProducts = await db.products.toArray();
+      setProducts(allProducts);
     } catch (err) {
       toast.error('Failed to load products');
     }
@@ -98,16 +96,13 @@ const AdminProducts = () => {
   const handleFileUpload = async (colorIndex, imgIndex, file) => {
     if (!file) return;
     try {
-      toast.loading('Uploading image...', { id: 'upload' });
-      const uploadData = new FormData();
-      uploadData.append('image', file);
-      const { data } = await api.post('/upload', uploadData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      if (data.success) {
-        handleImageChange(colorIndex, imgIndex, data.data.url);
-        toast.success('Upload complete!', { id: 'upload' });
-      }
+      toast.loading('Saving image...', { id: 'upload' });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        handleImageChange(colorIndex, imgIndex, reader.result);
+        toast.success('Image saved locally!', { id: 'upload' });
+      };
+      reader.readAsDataURL(file);
     } catch (err) {
       toast.error('Upload failed', { id: 'upload' });
     }
@@ -150,21 +145,24 @@ const AdminProducts = () => {
 
       if (editingId) {
         // Update product
-        const { data } = await api.put(`/products/${editingId}`, payload);
-        if (data.success) toast.success('Frame updated successfully');
+        await db.products.update(editingId, { ...payload, updated_at: new Date() });
+        toast.success('Frame updated successfully');
       } else {
-        // Create new product — use the actual uploaded image
-        const { data } = await api.post('/products', {
+        // Create new product
+        await db.products.add({
           ...payload,
           sku: `SKU-${Date.now().toString().slice(-6)}`,
-          description: 'Newly added premium frame.'
+          description: 'Newly added premium frame.',
+          is_active: true,
+          created_at: new Date(),
+          updated_at: new Date()
         });
-        if (data.success) toast.success('Frame added successfully');
+        toast.success('Frame added successfully');
       }
       setIsModalOpen(false);
       fetchProducts();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save frame');
+      toast.error('Failed to save frame');
     }
   };
 
@@ -174,7 +172,7 @@ const AdminProducts = () => {
 
   const deleteProduct = async () => {
     try {
-      await api.delete(`/products/${confirmModalData.idToDelete}`);
+      await db.products.delete(confirmModalData.idToDelete);
       toast.success('Frame deleted successfully');
       fetchProducts();
     } catch(err) {

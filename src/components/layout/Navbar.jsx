@@ -23,18 +23,21 @@ const Navbar = () => {
               <Link to="/" className="flex-shrink-0">
               <div className="flex flex-col items-start text-gradient">
                 {/* Top Left */}
-                <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.3em] font-medium mb-[-2px] ml-1">
+                {/* <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.3em] font-medium mb-[-2px] ml-1">
                   SHREE
-                </span>
+                </span> */}
                 
                 {/* Big Middle */}
                 <span className="text-2xl font-bold uppercase tracking-wide leading-none my-1">
-                  RADHESHYAM
+                  {/* SHIVNETRA */}
+                  OPTIC PALACE
+                  {/* SUPER OPTICS */}
                 </span>
                 
                 {/* Bottom Right */}
                 <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.25em] font-medium mt-[-2px] mr-1 self-end">
-                  CHASHMAGHAR
+                  {/* CHASHMAGHAR */}
+                  CONTACT LENS CLINIC
                 </span>
               </div>            
                 </Link>

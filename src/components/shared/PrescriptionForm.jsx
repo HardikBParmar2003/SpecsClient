@@ -12,8 +12,7 @@ const PrescriptionForm = ({ prescription, setPrescription }) => {
     <div>
       <label className="block text-xs text-[var(--text-muted)] mb-1">{label}</label>
       <input
-        type="number"
-        step="0.25"
+        type="text"
         className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-3 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold transition-colors text-sm"
         value={prescription[`${eye}_${field}`] || ''}
         onChange={(e) => handleChange(e, eye, field)}
@@ -32,9 +31,9 @@ const PrescriptionForm = ({ prescription, setPrescription }) => {
             {renderInput('CYL', 'od', 'cylinder')}
             {renderInput('AXIS', 'od', 'axis')}
             {renderInput('ADD', 'od', 'add')}
-            <div className="col-span-2">
+            {/* <div className="col-span-2">
                {renderInput('PD', 'od', 'pd')}
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -46,9 +45,9 @@ const PrescriptionForm = ({ prescription, setPrescription }) => {
             {renderInput('CYL', 'os', 'cylinder')}
             {renderInput('AXIS', 'os', 'axis')}
             {renderInput('ADD', 'os', 'add')}
-            <div className="col-span-2">
+            {/* <div className="col-span-2">
               {renderInput('PD', 'os', 'pd')}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

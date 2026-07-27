@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { HiX } from 'react-icons/hi';
 import { HiOutlineArrowDownTray, HiOutlineCamera } from 'react-icons/hi2';
 import { toast } from 'react-hot-toast';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { Share } from '@capacitor/share';
 import { shopConfig } from '../../config/shop.js';
 
 const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
@@ -175,11 +177,28 @@ const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
     img.src = productImg;
   };
 
-  const downloadSnapshot = () => {
-    const link = document.createElement('a');
-    link.href = snapshot;
-    link.download = `${shopConfig.downloadPrefix}-virtual-tryon.png`;
-    link.click();
+  const downloadSnapshot = async () => {
+    try {
+      const base64data = snapshot.split(',')[1];
+      const fileName = `${shopConfig.downloadPrefix}-virtual-tryon.png`;
+      
+      const savedFile = await Filesystem.writeFile({
+        path: fileName,
+        data: base64data,
+        directory: Directory.Cache
+      });
+      
+      await Share.share({
+        title: 'Virtual Try-On Snapshot',
+        url: savedFile.uri,
+        dialogTitle: 'Save or Share Snapshot'
+      });
+      
+      toast.success('Snapshot ready to save or share!', { duration: 4000 });
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to share snapshot');
+    }
   };
 
   if (!isOpen) return null;

@@ -2,7 +2,7 @@ import { useState, useEffect, useContext } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
 import { HiOutlineTrash } from 'react-icons/hi';
-import api from '../services/api';
+import { db } from '../services/db';
 import { AuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 
@@ -22,10 +22,13 @@ const CartPage = () => {
 
   const fetchCart = async () => {
     try {
-      const { data } = await api.get('/cart');
-      if (data.success) {
-        setCartItems(data.data);
-      }
+      const items = await db.cart_items.where({ user_id: Number(user.id) }).toArray();
+      // Join products manually
+      const itemsWithProducts = await Promise.all(items.map(async (item) => {
+        const product = await db.products.get(item.product_id);
+        return { ...item, product };
+      }));
+      setCartItems(itemsWithProducts.filter(item => item.product));
     } catch (error) {
       toast.error("Failed to load cart");
     } finally {
@@ -36,7 +39,7 @@ const CartPage = () => {
   const updateQuantity = async (id, quantity) => {
     if (quantity < 1) return;
     try {
-      await api.put(`/cart/${id}`, { quantity });
+      await db.cart_items.update(id, { quantity });
       fetchCart();
     } catch (error) {
       toast.error("Failed to update quantity");
@@ -45,7 +48,7 @@ const CartPage = () => {
 
   const removeItem = async (id) => {
     try {
-      await api.delete(`/cart/${id}`);
+      await db.cart_items.delete(id);
       fetchCart();
       toast.success("Item removed");
     } catch (error) {
@@ -55,19 +58,43 @@ const CartPage = () => {
 
   const handleCheckout = async () => {
     try {
-      const payload = {
-        order_type: 'online',
-        payment_method: 'card', // Mock default
-        // In a real app, this would redirect to Stripe/Razorpay
-      };
-      const { data } = await api.post('/orders', payload);
-      if (data.success) {
-        toast.success("Order placed successfully!");
-        setCartItems([]);
-        // navigate('/orders');
+      const totalCost = cartItems.reduce((sum, item) => sum + (parseFloat(item.product.price) * item.quantity), 0);
+      
+      const orderId = await db.orders.add({
+        user_id: Number(user.id),
+        ord_type: 'online',
+        status: 'pending',
+        frame_price: totalCost,
+        glass_price: 0,
+        discount: 0,
+        total_price: totalCost,
+        advance: 0,
+        advance_online: 0,
+        pay_status: 'pending',
+        pay_method: 'card',
+        reminder_months: 12,
+        reminder_date: new Date(new Date().setMonth(new Date().getMonth() + 12)),
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+
+      for (const item of cartItems) {
+        await db.order_items.add({
+          order_id: orderId,
+          product_id: item.product_id,
+          quantity: item.quantity,
+          unit_price: item.product.price,
+          created_at: new Date()
+        });
       }
+
+      const cartIds = cartItems.map(item => item.id);
+      await db.cart_items.bulkDelete(cartIds);
+
+      toast.success("Order placed successfully!");
+      setCartItems([]);
     } catch (error) {
-      toast.error(error.response?.data?.message || "Checkout failed");
+      toast.error("Checkout failed");
     }
   };
 

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
-import api from '../services/api';
+import { db } from '../services/db';
 import { shopConfig } from '../config/shop.js';
 const RegisterPage = () => {
   const [formData, setFormData] = useState({
@@ -21,13 +21,25 @@ const RegisterPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.post('/auth/register', formData);
-      if (data.success) {
-        toast.success('Registration successful! Please login.');
-        navigate('/login');
+      const existingUser = await db.users.where('mobile').equals(formData.mobile).first();
+      if (existingUser) {
+        toast.error('Mobile number already registered');
+        return;
       }
+      
+      await db.users.add({
+        name: formData.name,
+        email: formData.email,
+        mobile: formData.mobile,
+        password: formData.password,
+        role: 'admin',
+        created_at: new Date()
+      });
+      
+      toast.success('Registration successful! Please login.');
+      navigate('/login');
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Registration failed');
+      toast.error('Registration failed');
     }
   };
 

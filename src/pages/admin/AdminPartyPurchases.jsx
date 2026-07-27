@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { HiOutlinePlus, HiOutlinePencil, HiOutlineX, HiOutlineArrowLeft } from 'react-icons/hi';
+import { HiOutlinePlus, HiOutlinePencil, HiOutlineX, HiOutlineArrowLeft, HiOutlineTrash } from 'react-icons/hi';
 import CustomDatePicker from '../../components/shared/CustomDatePicker';
 import CustomPagination from '../../components/shared/CustomPagination';
-import api from '../../services/api';
+import ConfirmModal from '../../components/shared/ConfirmModal';
+import { db } from '../../services/db';
 import toast from 'react-hot-toast';
 
 const AdminPartyPurchases = () => {
@@ -16,6 +17,7 @@ const AdminPartyPurchases = () => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedPurchase, setSelectedPurchase] = useState(null);
+  const [confirmModalData, setConfirmModalData] = useState({ isOpen: false, idToDelete: null });
 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
@@ -25,9 +27,22 @@ const AdminPartyPurchases = () => {
   const fetchParty = async () => {
     try {
       setLoading(true);
-      const { data } = await api.get(`/parties/${id}`);
-      if (data.success) {
-        setParty(data.data);
+      const partyData = await db.parties.get(Number(id));
+      if (partyData) {
+        const purchases = await db.purchases.where({ party_id: Number(id) }).toArray();
+        purchases.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const total_cost = purchases.reduce((sum, p) => sum + (parseFloat(p.total_amount) || parseFloat(p.total_cost) || 0), 0);
+        const total_paid = purchases.reduce((sum, p) => sum + (parseFloat(p.paid_amount) || 0), 0);
+        
+        partyData.purchases = purchases.map(p => ({...p, total_cost: p.total_amount || p.total_cost}));
+        partyData.total_cost = total_cost;
+        partyData.total_paid = total_paid;
+        partyData.due_balance = total_cost - total_paid;
+
+        setParty(partyData);
+      } else {
+        toast.error('Party not found');
+        navigate('/admin/parties');
       }
     } catch (err) {
       toast.error('Failed to load party details');
@@ -44,13 +59,20 @@ const AdminPartyPurchases = () => {
   const handleAddPurchase = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.post(`/parties/${id}/purchases`, newPurchase);
-      if (data.success) {
-        toast.success('Purchase recorded successfully');
-        setIsAddModalOpen(false);
-        setNewPurchase({ item_name: '', quantity: 1, total_cost: '', paid_amount: '', date: new Date().toISOString().split('T')[0] });
-        fetchParty();
-      }
+      await db.purchases.add({
+        party_id: Number(id),
+        date: new Date(newPurchase.date),
+        item_name: newPurchase.item_name,
+        quantity: parseInt(newPurchase.quantity) || 1,
+        total_amount: parseFloat(newPurchase.total_cost) || 0,
+        paid_amount: parseFloat(newPurchase.paid_amount) || 0,
+        created_at: new Date(),
+        updated_at: new Date()
+      });
+      toast.success('Purchase recorded successfully');
+      setIsAddModalOpen(false);
+      setNewPurchase({ item_name: '', quantity: 1, total_cost: '', paid_amount: '', date: new Date().toISOString().split('T')[0] });
+      fetchParty();
     } catch (err) {
       toast.error('Failed to add purchase');
     }
@@ -59,14 +81,31 @@ const AdminPartyPurchases = () => {
   const handleEditPurchase = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await api.put(`/parties/${id}/purchases/${selectedPurchase.id}`, selectedPurchase);
-      if (data.success) {
-        toast.success('Purchase updated successfully');
-        setIsEditModalOpen(false);
-        fetchParty();
-      }
+      await db.purchases.update(selectedPurchase.id, {
+        date: new Date(selectedPurchase.date),
+        item_name: selectedPurchase.item_name,
+        quantity: parseInt(selectedPurchase.quantity) || 1,
+        total_amount: parseFloat(selectedPurchase.total_cost) || 0,
+        paid_amount: parseFloat(selectedPurchase.paid_amount) || 0,
+        updated_at: new Date()
+      });
+      toast.success('Purchase updated successfully');
+      setIsEditModalOpen(false);
+      fetchParty();
     } catch (err) {
       toast.error('Failed to update purchase');
+    }
+  };
+
+  const handleDeletePurchase = async () => {
+    try {
+      await db.purchases.delete(confirmModalData.idToDelete);
+      toast.success('Purchase deleted successfully');
+      setConfirmModalData({ isOpen: false, idToDelete: null });
+      if (selectedPurchase?.id === confirmModalData.idToDelete) setIsViewModalOpen(false);
+      fetchParty();
+    } catch (err) {
+      toast.error('Failed to delete purchase');
     }
   };
 
@@ -112,25 +151,44 @@ const AdminPartyPurchases = () => {
                 <th className="px-6 py-4 font-medium tracking-wider text-sm uppercase text-[var(--text-secondary)] text-right">Qty</th>
                 <th className="px-6 py-4 font-medium tracking-wider text-sm uppercase text-[var(--text-secondary)] text-right">Total Cost</th>
                 <th className="px-6 py-4 font-medium tracking-wider text-sm uppercase text-[var(--text-secondary)] text-right">Paid Amount</th>
+                <th className="px-6 py-4 font-medium tracking-wider text-sm uppercase text-[var(--text-secondary)] text-center">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--border-color)]">
               {loading ? (
-                <tr><td colSpan="5" className="text-center py-8">Loading purchases...</td></tr>
+                <tr><td colSpan="6" className="text-center py-8">Loading purchases...</td></tr>
               ) : currentPurchases.length === 0 ? (
-                <tr><td colSpan="5" className="text-center py-8 text-[var(--text-muted)]">No purchases found.</td></tr>
+                <tr><td colSpan="6" className="text-center py-8 text-[var(--text-muted)]">No purchases found.</td></tr>
               ) : (
                 currentPurchases.map(purchase => (
                   <tr 
                     key={purchase.id} 
                     onClick={() => { setSelectedPurchase(purchase); setIsViewModalOpen(true); }}
-                    className="hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer"
+                    className="hover:bg-[var(--bg-card-hover)] transition-colors cursor-pointer group"
                   >
                     <td className="px-6 py-4 text-sm">{new Date(purchase.date).toLocaleDateString('en-GB')}</td>
                     <td className="px-6 py-4 font-medium text-[var(--text-primary)]">{purchase.item_name}</td>
                     <td className="px-6 py-4 text-sm text-right">{purchase.quantity}</td>
                     <td className="px-6 py-4 text-sm text-right">₹{Number(purchase.total_cost).toFixed(2)}</td>
                     <td className="px-6 py-4 text-sm text-green-400 text-right">₹{Number(purchase.paid_amount).toFixed(2)}</td>
+                    <td className="px-6 py-4 text-center" onClick={(e) => e.stopPropagation()}>
+                      <div className="flex justify-center items-center gap-2">
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedPurchase(purchase); setIsEditModalOpen(true); }} 
+                          className="p-2 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                          title="Edit Purchase"
+                        >
+                          <HiOutlinePencil className="w-4 h-4 mx-auto" />
+                        </button>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setConfirmModalData({ isOpen: true, idToDelete: purchase.id }); }} 
+                          className="p-2 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
+                          title="Delete Purchase"
+                        >
+                          <HiOutlineTrash className="w-4 h-4 mx-auto" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
@@ -152,22 +210,31 @@ const AdminPartyPurchases = () => {
       {isViewModalOpen && selectedPurchase && (
         <div className="fixed inset-0 bg-[var(--bg-primary)]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl w-full max-w-3xl overflow-hidden shadow-[var(--shadow-card)] flex flex-col max-h-[90vh]">
-            <div className="flex justify-between items-center p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)]">
-              <div>
-                <h2 className="text-lg uppercase tracking-widest text-luxury-gold">Purchase Details</h2>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 p-5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-card)] relative">
+              <div className="pr-10">
+                <h2 className="text-lg uppercase tracking-widest text-luxury-gold leading-tight">Purchase Details</h2>
                 <p className="text-sm text-[var(--text-muted)] mt-1">{new Date(selectedPurchase.date).toLocaleDateString('en-GB')}</p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
                 <button 
                   onClick={() => { setIsViewModalOpen(false); setSelectedPurchase({...selectedPurchase, date: new Date(selectedPurchase.date).toISOString().split('T')[0]}); setIsEditModalOpen(true); }} 
-                  className="text-luxury-gold hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-luxury-gold/10 px-3 py-1.5 rounded-md"
+                  className="flex-1 sm:flex-none justify-center text-luxury-gold hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-luxury-gold/10 px-3 py-2 rounded-md"
                 >
                   <HiOutlinePencil className="w-4 h-4" /> Edit
                 </button>
-                <button onClick={() => setIsViewModalOpen(false)} className="text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-pointer">
-                  <HiOutlineX className="w-6 h-6" />
+                <button 
+                  onClick={() => setConfirmModalData({ isOpen: true, idToDelete: selectedPurchase.id })}
+                  className="flex-1 sm:flex-none justify-center text-red-400 hover:text-white transition-colors cursor-pointer text-xs uppercase tracking-widest font-semibold flex items-center gap-1 bg-red-400/10 hover:bg-red-500 px-3 py-2 rounded-md"
+                >
+                  <HiOutlineTrash className="w-4 h-4" /> Delete
                 </button>
               </div>
+              <button 
+                onClick={() => setIsViewModalOpen(false)} 
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 text-[var(--text-muted)] hover:text-red-400 transition-colors cursor-pointer bg-[var(--bg-primary)] sm:bg-transparent rounded-full p-1 sm:p-0 z-10"
+              >
+                <HiOutlineX className="w-6 h-6 sm:w-6 sm:h-6" />
+              </button>
             </div>
             <div className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--bg-primary)]">
               <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-5 mb-6">
@@ -309,6 +376,14 @@ const AdminPartyPurchases = () => {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={confirmModalData.isOpen}
+        onClose={() => setConfirmModalData({ isOpen: false, idToDelete: null })}
+        onConfirm={handleDeletePurchase}
+        title="Delete Purchase"
+        message="Are you sure you want to delete this purchase? This action cannot be undone."
+      />
     </div>
   );
 };

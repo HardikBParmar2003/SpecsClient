@@ -18,9 +18,16 @@ const CustomDatePicker = ({ label, value, onChange }) => {
 
   useEffect(() => {
     if (value) {
-      // Split YYYY-MM-DD to avoid timezone shifting
-      const [y, m, d] = value.split('-');
-      setCurrentMonth(new Date(y, m - 1, d));
+      if (typeof value === 'string' && value.includes('-')) {
+        const [y, m, d] = value.split('-');
+        setCurrentMonth(new Date(y, m - 1, d));
+      } else if (value instanceof Date) {
+        setCurrentMonth(value);
+      } else {
+        // try to parse
+        const d = new Date(value);
+        if (!isNaN(d.getTime())) setCurrentMonth(d);
+      }
     }
   }, [value]);
 
@@ -50,33 +57,42 @@ const CustomDatePicker = ({ label, value, onChange }) => {
   // Display value formatting
   let displayValue = "Select Date";
   if (value) {
-    const [y, m, d] = value.split('-');
-    displayValue = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    if (typeof value === 'string' && value.includes('-')) {
+      const [y, m, d] = value.split('-');
+      displayValue = `${String(d).padStart(2, '0')}/${String(m).padStart(2, '0')}/${y}`;
+    } else {
+      const d = new Date(value);
+      if (!isNaN(d.getTime())) {
+        displayValue = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+      }
+    }
   }
 
   return (
-    <div className="relative" ref={popoverRef}>
+    <div className="relative w-full" ref={popoverRef}>
       {/* Trigger Button / Pill */}
       <div 
         onClick={() => setIsOpen(!isOpen)}
-        className={`flex items-center gap-2 px-4 py-2 rounded cursor-pointer transition-all duration-300 border backdrop-blur-sm
+        className={`flex items-center justify-between w-full px-4 py-2 rounded cursor-pointer transition-all duration-300 border backdrop-blur-sm
           ${value 
             ? 'bg-luxury-gold/10 border-luxury-gold/40 text-[var(--text-primary)] shadow-[0_0_15px_rgba(212,175,55,0.15)] hover:bg-luxury-gold/20' 
             : 'bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-secondary)] hover:border-luxury-gold/50 hover:text-[var(--text-primary)]'
           }
         `}
       >
-        <HiOutlineCalendar className={`w-4 h-4 transition-colors ${value ? 'text-luxury-gold' : 'text-[var(--text-muted)]'}`} />
-        <span className="text-xs font-medium tracking-widest uppercase flex items-center">
-          {label && <span className="opacity-60 mr-1.5 font-light">{label}</span>}
-          <span className={value ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}>
-            {displayValue}
+        <div className="flex items-center gap-2">
+          <HiOutlineCalendar className={`w-4 h-4 transition-colors ${value ? 'text-luxury-gold' : 'text-[var(--text-muted)]'}`} />
+          <span className="text-xs font-medium tracking-widest uppercase flex items-center">
+            {label && <span className="opacity-60 mr-1.5 font-light">{label}</span>}
+            <span className={value ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]'}>
+              {displayValue}
+            </span>
           </span>
-        </span>
+        </div>
         {value && (
           <div 
             onClick={handleClear} 
-            className="ml-1 p-0.5 rounded-full hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-400 transition-colors"
+            className="ml-2 p-0.5 rounded-full hover:bg-red-500/20 text-[var(--text-muted)] hover:text-red-400 transition-colors shrink-0"
             title="Clear date"
           >
             <HiX className="w-3.5 h-3.5" />
@@ -120,7 +136,16 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                 if (!date) return <div key={`empty-${i}`} />;
                 
                 const dateString = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-                const isSelected = value === dateString;
+                
+                let valueDateString = '';
+                if (value) {
+                  if (typeof value === 'string' && value.includes('-')) valueDateString = value;
+                  else {
+                    const d = new Date(value);
+                    if (!isNaN(d.getTime())) valueDateString = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+                  }
+                }
+                const isSelected = valueDateString === dateString;
                 
                 const today = new Date();
                 const todayString = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
@@ -129,7 +154,7 @@ const CustomDatePicker = ({ label, value, onChange }) => {
                 return (
                   <button
                     key={i}
-                    onClick={() => handleSelect(date)}
+                    onClick={(e) => { e.preventDefault(); handleSelect(date); }}
                     className={`w-8 h-8 rounded-full flex items-center justify-center text-xs transition-all duration-200 cursor-pointer mx-auto
                       ${isSelected 
                         ? 'bg-gradient-to-br from-luxury-gold to-luxury-gold-dark text-black font-bold shadow-[0_0_15px_rgba(212,175,55,0.4)] scale-110' 

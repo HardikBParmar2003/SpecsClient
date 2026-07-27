@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useContext, useState } from 'react';
 import { AuthContext } from '../../context/AuthContext';
 import { toast } from 'react-hot-toast';
-import api from '../../services/api';
+import { db } from '../../services/db';
 import { HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
 
 const ProductCard = ({ product }) => {
@@ -38,7 +38,17 @@ const ProductCard = ({ product }) => {
     }
 
     try {
-      await api.post('/cart', { product_id: product.id, quantity: 1 });
+      const existingCartItem = await db.cart_items.where('[user_id+product_id]').equals([user.id, product.id]).first();
+      if (existingCartItem) {
+        await db.cart_items.update(existingCartItem.id, { quantity: existingCartItem.quantity + 1 });
+      } else {
+        await db.cart_items.add({
+          user_id: user.id,
+          product_id: product.id,
+          quantity: 1,
+          created_at: new Date()
+        });
+      }
       toast.success(`${product.name} added to cart!`, {
         style: { background: 'var(--bg-card)', color: '#d4af37', border: '1px solid rgba(212, 175, 55, 0.3)' }
       });
