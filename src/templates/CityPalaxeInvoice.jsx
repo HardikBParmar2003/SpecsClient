@@ -44,9 +44,9 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
         <div style={{ textAlign: 'center', marginBottom: '18px' }}>
           <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#1e3a8a' }}>{shopConfig.shopName || 'Optic Palace'}</h1>
         </div>
-
+        
         {/* Subtitle / Address Box */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', border: '1px solid #1e3a8a', padding: '8px 10px', margin: '0 15px 16px 15px', fontWeight: 'bold', fontSize: '14px', backgroundColor: '#1e3a8a', color: '#ffffff', borderRadius: '4px', lineHeight: 1 }}>
+        <div style={{ display: 'block', textAlign: 'center', marginBottom: '16px', paddingBottom: '12px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1 }}>
           {shopConfig.address ? shopConfig.address.toUpperCase() : ''}
         </div>
 
