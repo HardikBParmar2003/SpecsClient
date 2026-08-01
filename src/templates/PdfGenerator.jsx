@@ -31,7 +31,8 @@ const PdfGenerator = forwardRef(({ order }, ref) => {
         const canvas = await html2canvas(printRef.current, {
           scale: 2, // better resolution
           useCORS: true,
-          logging: false
+          logging: false,
+          windowWidth: 800
         });
         
         const imgData = canvas.toDataURL('image/png');

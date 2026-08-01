@@ -31,7 +31,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
   const dateStr = new Date(order.created_at).toLocaleDateString('en-GB');
 
   return (
-    <div ref={ref} className="p-4 sm:p-8" style={{ width: '800px', fontFamily: 'Arial, sans-serif', margin: '0 auto', fontSize: '13px', backgroundColor: '#ffffff', color: '#000', boxSizing: 'border-box' }}>
+    <div ref={ref} style={{ width: '800px', padding: '32px', fontFamily: 'Arial, sans-serif', margin: '0 auto', fontSize: '13px', backgroundColor: '#ffffff', color: '#000', boxSizing: 'border-box' }}>
       
       <div style={{ border: '2px solid #1e3a8a' }}>
         {/* Header Info */}
@@ -46,7 +46,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
         </div>
         
         {/* Subtitle / Address Box */}
-        <div style={{ display: 'block', textAlign: 'center', marginBottom: '16px', paddingBottom: '12px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1 }}>
+        <div style={{ display: 'block', textAlign: 'center', marginBottom: '16px', padding: '12px 8px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1.4 }}>
           {shopConfig.address ? shopConfig.address.toUpperCase() : ''}
         </div>
 
