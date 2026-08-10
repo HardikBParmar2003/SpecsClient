@@ -112,6 +112,7 @@ const AdminCustomerOrders = () => {
                 <tr>
                   <th className="px-6 py-4 font-medium tracking-wider">Order No.</th>
                   <th className="px-6 py-4 font-medium tracking-wider">Date</th>
+                  <th className="px-6 py-4 font-medium tracking-wider">Customer Name</th>
                   <th className="px-6 py-4 font-medium tracking-wider">Order Status</th>
                   <th className="px-6 py-4 font-medium tracking-wider">Payment</th>
                   <th className="px-6 py-4 font-medium tracking-wider text-right">Total</th>
@@ -123,6 +124,7 @@ const AdminCustomerOrders = () => {
                   <tr key={order.id} onClick={() => setSelectedOrder(order)} className="hover:bg-[var(--border-color)] transition-colors cursor-pointer group">
                     <td className="px-6 py-4 font-medium text-[var(--text-primary)]">{index + 1}</td>
                     <td className="px-6 py-4 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{order.customer_name || customer.name}</td>
                     <td className="px-6 py-4">
                       <span className={`px-2 py-1 rounded text-[10px] uppercase tracking-wider border w-fit ${
                         order.status === 'completed' ? 'bg-green-500/10 text-green-500 border-green-500/20' : 
@@ -181,7 +183,7 @@ const AdminCustomerOrders = () => {
       {/* Selected Order Deep Details Modal */}
       {selectedOrder && !isEditing && (
         <OrderDetailsModal 
-          order={{...selectedOrder, customerName: customer.name, mobile: customer.mobile}} 
+          order={{...selectedOrder, customerName: selectedOrder.customer_name || customer.name, mobile: customer.mobile}} 
           onClose={() => setSelectedOrder(null)} 
           onEdit={() => setIsEditing(true)} 
         />
@@ -189,7 +191,7 @@ const AdminCustomerOrders = () => {
 
       {isEditing && selectedOrder && (
         <EditOrderModal 
-          order={selectedOrder} 
+          order={{...selectedOrder, customerName: selectedOrder.customer_name || customer.name}} 
           onClose={() => setIsEditing(false)} 
           onUpdate={() => {
             fetchCustomerData();

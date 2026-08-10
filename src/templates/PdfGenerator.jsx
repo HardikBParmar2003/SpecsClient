@@ -47,7 +47,7 @@ const PdfGenerator = forwardRef(({ order }, ref) => {
         
         pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
         
-        const customerName = order.customerName || order.user?.name || 'Customer';
+        const customerName = order.customer_name || order.customerName || order.user?.name || 'Customer';
         const formattedName = customerName.replace(/\s+/g, '-');
         
         const orderDate = new Date(order.created_at || new Date());

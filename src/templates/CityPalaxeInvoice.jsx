@@ -56,7 +56,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
           <div style={{ display: 'flex', marginBottom: '4px' }}>
             <div style={{ width: '50px', fontWeight: 'bold' }}>M/s.</div>
             <div style={{ width: '10px', fontWeight: 'bold' }}>:</div>
-            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{order.customerName || order.user?.name || 'Customer'}</div>
+            <div style={{ fontWeight: 'bold', textTransform: 'uppercase' }}>{order.customer_name || order.customerName || order.user?.name || 'Customer'}</div>
           </div>
 
           <div style={{ display: 'flex', marginBottom: '4px' }}>
@@ -144,7 +144,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
           <div style={{ width: '20%', textAlign: 'right', fontWeight: 'bold', fontSize: '15px' }}>{totalAdvance.toFixed(2)}</div>
         </div>
         <div style={{ display: 'flex', borderTop: '1px solid #000', padding: '8px 10px', backgroundColor: '#f0f4f8' }}>
-          <div style={{ width: '50%', textTransform: 'uppercase', fontSize: '14px', fontWeight: 'bold' }}>{order.customerName || order.user?.name || 'CUSTOMER'}</div>
+          <div style={{ width: '50%', textTransform: 'uppercase', fontSize: '14px', fontWeight: 'bold' }}>{order.customer_name || order.customerName || order.user?.name || 'CUSTOMER'}</div>
           <div style={{ width: '30%', textAlign: 'right', fontWeight: 'bold', fontSize: '15px', paddingRight: '20px', color: '#b91c1c' }}>Due Amount :</div>
           <div style={{ width: '20%', textAlign: 'right', fontWeight: 'bold', fontSize: '16px', color: '#b91c1c' }}>{balance.toFixed(2)}</div>
         </div>

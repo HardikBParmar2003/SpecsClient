@@ -63,6 +63,7 @@ const AdminPOS = () => {
       // 2. Create Order
       const orderId = await db.orders.add({
         user_id: customer.id,
+        customer_name: formData.name,
         ord_type: 'walk-in',
         status: formData.status,
         frame_price: frameCost,

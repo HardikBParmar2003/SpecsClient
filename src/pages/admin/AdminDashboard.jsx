@@ -116,7 +116,7 @@ const AdminDashboard = () => {
         const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
         return {
           ...o,
-          customerName: u ? u.name : 'Unknown',
+          customerName: o.customer_name || (u ? u.name : 'Unknown'),
           customerMobile: u ? u.mobile : '',
           amount: parseFloat(o.total_price) || 0,
           order_items: orderItems,

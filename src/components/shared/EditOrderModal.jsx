@@ -14,7 +14,8 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
     discount: order.discount || 0,
     advance: order.advance || 0,
     advance_online: order.advance_online || 0,
-    bill_number: order.bill_number || ''
+    bill_number: order.bill_number || '',
+    customer_name: order.customer_name || order.customerName || ''
   });
 
   const [orderItems, setOrderItems] = useState(() => {
@@ -79,6 +80,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
         advance_online: advanceOnlineVal,
         total_price: calculatedTotal,
         bill_number: formData.bill_number,
+        customer_name: formData.customer_name,
         updated_at: new Date()
       });
 
@@ -249,6 +251,10 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                         {value: "partially", label: "Partially"}
                       ]}
                     />
+                  </div>
+                  <div>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Customer Name</label>
+                    <input type="text" name="customer_name" value={formData.customer_name} onChange={(e) => setFormData({...formData, customer_name: e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-luxury-gold transition-colors" />
                   </div>
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Bill Number</label>

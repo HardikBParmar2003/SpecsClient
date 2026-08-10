@@ -45,7 +45,8 @@ const AdminOrders = () => {
         
         return {
           id: o.id.toString(),
-          customerName: user ? user.name : 'Unknown',
+          customerName: o.customer_name || (user ? user.name : 'Unknown'),
+          customer_name: o.customer_name,
           mobile: user ? user.mobile : '',
           type: o.ord_type,
           amount: o.total_price,
