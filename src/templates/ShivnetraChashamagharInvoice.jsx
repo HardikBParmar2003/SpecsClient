@@ -58,38 +58,41 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
         </div>
       </div>
 
-      {/* Prescription Table (if exists) */}
-      {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+      {/* Measurement Table (if exists) */}
+      {order.measurements && order.measurements.length > 0 && (
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Eye Prescription</h3>
-          {order.eye_prescriptions.map((p, idx) => (
+          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Measurements</h3>
+          {order.measurements.map((p, idx) => (
             <table key={idx} style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
               <thead style={{ backgroundColor: primaryColor, color: '#ffffff' }}>
                 <tr>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>EYE</th>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>SPH</th>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>CYL</th>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>AXIS</th>
-                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>ADD</th>
-                  {/* <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>PD</th> */}
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>PART</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>LENGTH</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>SHOULDER</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>CHEST</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>WAIST</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>SLEEVE</th>
+                  <th style={{ padding: '10px', fontWeight: 'normal', fontSize: '12px', letterSpacing: '1px' }}>NECK</th>
                 </tr>
               </thead>
               <tbody>
                 <tr style={{ backgroundColor: '#ffffff', borderBottom: `1px solid ${borderColor}` }}>
-                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Right (OD)</td>
-                  <td style={{ padding: '12px' }}>{p.od_sphere || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.od_cylinder || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.od_axis || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.od_add || '-'}</td>
-                  {/* <td style={{ padding: '12px' }}>{p.od_pd || '-'}</td> */}
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Top</td>
+                  <td style={{ padding: '12px' }}>{p.top_length || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.shoulder || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.chest || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.top_waist || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.sleeve || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.neck || '-'}</td>
                 </tr>
                 <tr style={{ backgroundColor: lightBg }}>
-                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Left (OS)</td>
-                  <td style={{ padding: '12px' }}>{p.os_sphere || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.os_cylinder || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.os_axis || '-'}</td>
-                  <td style={{ padding: '12px' }}>{p.os_add || '-'}</td>
-                  {/* <td style={{ padding: '12px' }}>{p.os_pd || '-'}</td> */}
+                  <td style={{ padding: '12px', fontWeight: 'bold', color: primaryColor }}>Bottom</td>
+                  <td style={{ padding: '12px' }}>{p.bottom_length || '-'}</td>
+                  <td style={{ padding: '12px' }}>-</td>
+                  <td style={{ padding: '12px' }}>{p.hip ? p.hip + ' (Hip)' : '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.bottom_waist || '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.thigh ? p.thigh + ' (Thigh)' : '-'}</td>
+                  <td style={{ padding: '12px' }}>{p.bottom ? p.bottom + ' (Bottom)' : '-'}</td>
                 </tr>
               </tbody>
             </table>
@@ -112,8 +115,8 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
               {order.order_items.map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: `1px solid ${borderColor}` }}>
                   <td style={{ padding: '15px 12px' }}>
-                    <div style={{ fontWeight: 'bold', color: primaryColor, fontSize: '15px' }}>{item.custom_frame_name || item.product?.name || item.product_name || 'Eyewear Frame'}</div>
-                    {item.glass_type && <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Lens Type: {item.glass_type}</div>}
+                    <div style={{ fontWeight: 'bold', color: primaryColor, fontSize: '15px' }}>{item.custom_item_name || item.product?.name || item.product_name || 'Custom Outfit'}</div>
+                    {item.fabric_type && <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Lens Type: {item.fabric_type}</div>}
                   </td>
                   <td style={{ padding: '15px 12px', textAlign: 'right', fontWeight: 'bold' }}>₹{parseFloat(item.unit_price).toFixed(2)}</td>
                 </tr>
@@ -129,13 +132,13 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
           <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '8px 0', color: '#666' }}>Frame Cost:</td>
+                <td style={{ padding: '8px 0', color: '#666' }}>Material Cost:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{framePrice.toFixed(2)}</td>
               </tr>
-              <tr>
-                <td style={{ padding: '8px 0', color: '#666' }}>Glass Cost:</td>
+              {/* <tr>
+                <td style={{ padding: '8px 0', color: '#666' }}>Making Charge:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{glassPrice.toFixed(2)}</td>
-              </tr>
+              </tr> */}
               <tr>
                 <td style={{ padding: '8px 0', color: '#666', borderTop: `1px solid ${borderColor}` }}>Sub Total:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold', borderTop: `1px solid ${borderColor}` }}>₹{subTotal.toFixed(2)}</td>

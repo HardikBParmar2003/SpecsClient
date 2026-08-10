@@ -2,18 +2,18 @@ import React, { useState } from 'react';
 import { HiX, HiOutlineSave } from 'react-icons/hi';
 import { db } from '../../services/db';
 import { toast } from 'react-hot-toast';
-import PrescriptionForm from './PrescriptionForm';
+import MeasurementForm from './MeasurementForm';
 import CustomSelect from './CustomSelect';
 
 const EditOrderModal = ({ order, onClose, onUpdate }) => {
   const [formData, setFormData] = useState({
     status: order.status,
     pay_status: order.pay_status || 'pending',
-    frame_price: order.frame_price || 0,
-    glass_price: order.glass_price || 0,
+    amount: (parseFloat(order.frame_price) || 0) + (parseFloat(order.glass_price) || 0),
+    
     discount: order.discount || 0,
-    advance: order.advance || 0,
-    advance_online: order.advance_online || 0,
+    
+    
     bill_number: order.bill_number || ''
   });
 
@@ -22,23 +22,23 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
     return order.order_items;
   });
 
-  const [prescriptions, setPrescriptions] = useState(
-    order.eye_prescriptions && order.eye_prescriptions.length > 0
-      ? JSON.parse(JSON.stringify(order.eye_prescriptions))
+  const [measurements, setMeasurements] = useState(
+    order.measurements && order.measurements.length > 0
+      ? JSON.parse(JSON.stringify(order.measurements))
       : []
   );
 
   const [isSaving, setIsSaving] = useState(false);
 
   const isWalkIn = true; // Forcing true since all editable POS orders are walk-ins
-  const framePriceVal = parseFloat(formData.frame_price) || 0;
-  const glassPriceVal = parseFloat(formData.glass_price) || 0;
+  const amountVal = parseFloat(formData.amount) || 0;
+  
   const discountVal = parseFloat(formData.discount) || 0;
-  const advanceVal = parseFloat(formData.advance) || 0;
-  const advanceOnlineVal = parseFloat(formData.advance_online) || 0;
-  const totalAdvance = advanceVal + advanceOnlineVal;
+  
+  
+  const totalAdvance = 0;
 
-  const manualSubtotal = (framePriceVal > 0 || glassPriceVal > 0) ? (framePriceVal + glassPriceVal) : (() => {
+  const manualSubtotal = amountVal > 0 ? amountVal : (() => {
     if (orderItems && orderItems.length > 0) {
       return orderItems.reduce((sum, item) => sum + (parseFloat(item.unit_price) || 0) * (parseInt(item.quantity) || 1), 0);
     }
@@ -46,7 +46,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
   })();
 
   const calculatedTotal = manualSubtotal - discountVal;
-  const balance = Math.max(0, calculatedTotal - totalAdvance);
+  const balance = calculatedTotal;
 
   const handleItemChange = (index, field, value) => {
     const newItems = [...orderItems];
@@ -72,11 +72,11 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
       await db.orders.update(orderId, {
         status: formData.status,
         pay_status: formData.pay_status,
-        frame_price: framePriceVal,
-        glass_price: glassPriceVal,
+        frame_price: amountVal,
+        glass_price: 0,
         discount: discountVal,
-        advance: advanceVal,
-        advance_online: advanceOnlineVal,
+        advance: 0,
+        advance_online: 0,
         total_price: calculatedTotal,
         bill_number: formData.bill_number,
         updated_at: new Date()
@@ -87,23 +87,23 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
       for(const item of itemsToSave) {
         await db.order_items.add({
           order_id: orderId,
-          custom_frame_name: item.custom_frame_name,
-          glass_type: item.glass_type,
+          custom_item_name: item.custom_item_name,
+          fabric_type: item.fabric_type,
           unit_price: item.unit_price,
           quantity: item.quantity || 1,
           created_at: new Date()
         });
       }
 
-      // Overwrite prescriptions
-      await db.eye_prescriptions.where({ order_id: orderId }).delete();
-      for (const p of prescriptions) {
-        if (p.od_sphere || p.os_sphere) {
-          await db.eye_prescriptions.add({
+      // Overwrite measurements
+      await db.measurements.where({ order_id: orderId }).delete();
+      for (const p of measurements) {
+        if (p.top_length || p.bottom_length) {
+          await db.measurements.add({
             user_id: realOrder.user_id,
             order_id: orderId,
             ...p,
-            prescription_date: new Date(),
+            measurement_date: new Date(),
             created_at: new Date()
           });
         }
@@ -156,34 +156,34 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
             
             {/* LEFT COLUMN: Main Details */}
             <div className="lg:col-span-2 space-y-8">
-              {/* Prescriptions */}
+              {/* Measurements */}
               <div className="glassmorphism p-6 rounded-xl border border-[var(--border-color)] shadow-[var(--shadow-card)]">
                 <div className="flex justify-between items-center border-b border-[var(--border-color)] pb-3 mb-6">
-                  <h3 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)]">Eye Prescriptions</h3>
-                  {prescriptions.length === 0 && (
+                  <h3 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)]">Measurementss</h3>
+                  {measurements.length === 0 && (
                     <button 
-                      onClick={() => setPrescriptions([{ od_sphere: '', od_cylinder: '', od_axis: '', od_add: '', od_pd: '', os_sphere: '', os_cylinder: '', os_axis: '', os_add: '', os_pd: '' }])}
+                      onClick={() => setMeasurements([{ top_length: '', shoulder: '', chest: '', top_waist: '', sleeve: '', neck: '', bottom_length: '', bottom_waist: '', hip: '', thigh: '', bottom: '', inseam: '' }])}
                       className="text-xs bg-luxury-gold/10 px-3 py-1.5 rounded text-luxury-gold uppercase tracking-wider hover:bg-luxury-gold hover:text-black transition-colors cursor-pointer font-medium"
                     >
-                      + Add Prescription
+                      + Add Measurement
                     </button>
                   )}
                 </div>
-                {prescriptions.length > 0 ? (
-                  prescriptions.map((p, idx) => (
+                {measurements.length > 0 ? (
+                  measurements.map((p, idx) => (
                     <div key={idx} className="mb-6 last:mb-0">
-                       <PrescriptionForm 
-                         prescription={p} 
-                         setPrescription={(newP) => {
-                           const newPrescriptions = [...prescriptions];
-                           newPrescriptions[idx] = newP;
-                           setPrescriptions(newPrescriptions);
+                       <MeasurementForm 
+                         measurement={p} 
+                         setMeasurement={(newP) => {
+                           const newMeasurements = [...measurements];
+                           newMeasurements[idx] = newP;
+                           setMeasurements(newMeasurements);
                          }} 
                        />
                     </div>
                   ))
                 ) : (
-                  <div className="text-center py-8 text-[var(--text-muted)] text-sm">No prescriptions added for this order.</div>
+                  <div className="text-center py-8 text-[var(--text-muted)] text-sm">No measurements added for this order.</div>
                 )}
               </div>
 
@@ -194,20 +194,20 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                   {orderItems.map((item, index) => (
                     <div key={index} className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 border border-[var(--border-color)] rounded-lg bg-[var(--bg-card)]">
                       <div className="md:col-span-2">
-                        <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Description / Frame Name</label>
+                        <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Description / Item Name</label>
                         <input 
                           type="text" 
-                          value={item.custom_frame_name || item.product_name || ''} 
-                          onChange={(e) => handleItemChange(index, 'custom_frame_name', e.target.value)}
+                          value={item.custom_item_name || item.product_name || ''} 
+                          onChange={(e) => handleItemChange(index, 'custom_item_name', e.target.value)}
                           className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2.5 text-sm text-[var(--input-text)] focus:outline-none focus:border-luxury-gold transition-colors"
                         />
                       </div>
                       <div>
-                        <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Glass Type</label>
+                        <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Fabric Type</label>
                         <input 
                           type="text" 
-                          value={item.glass_type || ''} 
-                          onChange={(e) => handleItemChange(index, 'glass_type', e.target.value)}
+                          value={item.fabric_type || ''} 
+                          onChange={(e) => handleItemChange(index, 'fabric_type', e.target.value)}
                           className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2.5 text-sm text-[var(--input-text)] focus:outline-none focus:border-luxury-gold transition-colors"
                         />
                       </div>
@@ -264,7 +264,7 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                 
                 <div className="space-y-4 mb-6">
                   <div>
-                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Price (₹)</label>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Material Price (₹)</label>
                     <input 
                       type="number" 
                       value={formData.frame_price} 
@@ -272,15 +272,15 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
                       className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-luxury-gold transition-colors"
                     />
                   </div>
-                  <div>
-                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Glass Price (₹)</label>
+                  {/* <div>
+                    <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Making Charge (₹)</label>
                     <input 
                       type="number" 
                       value={formData.glass_price} 
                       onChange={(e) => setFormData({...formData, glass_price: e.target.value})}
                       className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-primary)] focus:outline-none focus:border-luxury-gold transition-colors"
                     />
-                  </div>
+                  </div> */}
                   <div>
                     <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Subtotal (₹)</label>
                     <div className="w-full bg-[var(--input-bg)] border border-[var(--border-color)] rounded px-3 py-2 text-sm text-[var(--text-muted)] opacity-70">

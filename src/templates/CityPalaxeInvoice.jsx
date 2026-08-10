@@ -15,16 +15,16 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
   const subTotal = calculatedSubTotal > 0 ? calculatedSubTotal : (finalTotal + discount);
   const balance = Math.max(0, finalTotal - totalAdvance);
 
-  let frameName = 'FRAME';
-  let glassName = 'GLASS';
+  let frameName = 'SHIRT';
+  let glassName = 'PENT';
 
   if (order.order_items && order.order_items.length > 0) {
     const item = order.order_items[0];
-    if (item.custom_frame_name || item.product?.name || item.product_name) {
-      frameName = (item.custom_frame_name || item.product?.name || item.product_name).toUpperCase();
+    if (item.custom_item_name || item.product?.name || item.product_name) {
+      frameName = (item.custom_item_name || item.product?.name || item.product_name).toUpperCase();
     }
-    if (item.glass_type) {
-      glassName = item.glass_type.toUpperCase();
+    if (item.fabric_type) {
+      glassName = item.fabric_type.toUpperCase();
     }
   }
 
@@ -36,8 +36,8 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
       <div style={{ border: '2px solid #1e3a8a' }}>
         {/* Header Info */}
         <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#f0f4f8', color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ fontWeight: 'bold' }}>Irshad : {shopConfig.phone_1 || '9825707708'}</div>
-          <div style={{ fontWeight: 'bold' }}>Jabir : {shopConfig.phone_2 || '9727288438'}</div>
+          <div style={{ fontWeight: 'bold' }}>Gautam Bhai : {shopConfig.phone_1 || '9825707708'}</div>
+          {/* <div style={{ fontWeight: 'bold' }}>Jabir : {shopConfig.phone_2 || '9727288438'}</div> */}
         </div>
 
         {/* Title */}
@@ -47,7 +47,8 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
         
         {/* Subtitle / Address Box */}
         <div style={{ display: 'block', textAlign: 'center', marginBottom: '16px', padding: '12px 8px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1.4 }}>
-          {shopConfig.address ? shopConfig.address.toUpperCase() : ''}
+          {/* {shopConfig.address ? shopConfig.address.toUpperCase() : ''} */}
+          Near Kaminiya Nagar, Talaja Road, Bhavnagar, Gujarat 364001
         </div>
 
       {/* Customer & Bill Details */}
@@ -95,24 +96,24 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
             <th style={{ border: '1px solid #000', borderLeft: 'none', padding: '6px', width: '5%', textAlign: 'center', fontSize: '14px' }}>Sr.</th>
             <th style={{ border: '1px solid #000', padding: '6px', width: '45%', textAlign: 'center', fontSize: '14px' }}>Description</th>
             <th style={{ border: '1px solid #000', padding: '6px', width: '10%', textAlign: 'center', fontSize: '14px' }}>Qty.</th>
-            <th style={{ border: '1px solid #000', padding: '6px', width: '20%', textAlign: 'center', fontSize: '14px' }}>Rate</th>
-            <th style={{ border: '1px solid #000', borderRight: 'none', padding: '6px', width: '20%', textAlign: 'center', fontSize: '14px' }}>Amount</th>
+            {/* <th style={{ border: '1px solid #000', padding: '6px', width: '20%', textAlign: 'center', fontSize: '14px' }}>Rate</th>
+            <th style={{ border: '1px solid #000', borderRight: 'none', padding: '6px', width: '20%', textAlign: 'center', fontSize: '14px' }}>Amount</th> */}
           </tr>
         </thead>
         <tbody>
           <tr>
             <td style={{ borderLeft: 'none', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>1</td>
             <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'left' }}>{frameName}</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>1</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'right' }}>{framePrice.toFixed(2)}</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '6px', textAlign: 'right' }}>{framePrice.toFixed(2)}</td>
+            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>3</td>
+            {/* <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'right' }}>{framePrice.toFixed(2)}</td>
+            <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '6px', textAlign: 'right' }}>{framePrice.toFixed(2)}</td> */}
           </tr>
           <tr>
             <td style={{ borderLeft: 'none', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>2</td>
             <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'left' }}>{glassName}</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>1</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'right' }}>{glassPrice.toFixed(2)}</td>
-            <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '6px', textAlign: 'right' }}>{glassPrice.toFixed(2)}</td>
+            <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'center' }}>3  </td>
+            {/* <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '6px', textAlign: 'right' }}>{glassPrice.toFixed(2)}</td>
+            <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '6px', textAlign: 'right' }}>{glassPrice.toFixed(2)}</td> */}
           </tr>
           {/* Fill empty space so the table has a minimum height */}
           {[...Array(5)].map((_, i) => (
@@ -120,8 +121,8 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
               <td style={{ borderLeft: 'none', borderRight: '1px solid #000', padding: '10px 6px' }}>&nbsp;</td>
               <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '10px 6px' }}>&nbsp;</td>
               <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '10px 6px' }}>&nbsp;</td>
-              <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '10px 6px' }}>&nbsp;</td>
-              <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '10px 6px' }}>&nbsp;</td>
+              {/* <td style={{ borderLeft: '1px solid #000', borderRight: '1px solid #000', padding: '10px 6px' }}>&nbsp;</td>
+              <td style={{ borderLeft: '1px solid #000', borderRight: 'none', padding: '10px 6px' }}>&nbsp;</td> */}
             </tr>
           ))}
         </tbody>
@@ -150,32 +151,38 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
         </div>
       </div>
 
-      {/* Prescription Table */}
-      {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+      {/* Measurement Table */}
+      {order.measurements && order.measurements.length > 0 && (
         <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', textAlign: 'center' }}>
           <thead>
             <tr style={{ backgroundColor: '#1e3a8a', color: '#ffffff' }}>
-              <th style={{ border: '1px solid #000', borderLeft: 'none', borderTop: '1px solid #000', padding: '8px 10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', width: '20%' }}>Eye</th>
-              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '20%' }}>SPH</th>
-              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '20%' }}>CYL</th>
-              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '20%' }}>AXIS</th>
-              <th style={{ border: '1px solid #000', borderRight: 'none', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '20%' }}>ADD</th>
+              <th style={{ border: '1px solid #000', borderLeft: 'none', borderTop: '1px solid #000', padding: '8px 10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', width: '16%' }}>Part</th>
+              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Length</th>
+              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Shoulder</th>
+              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Chest</th>
+              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Waist</th>
+              <th style={{ border: '1px solid #000', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Sleeve</th>
+              <th style={{ border: '1px solid #000', borderRight: 'none', borderTop: '1px solid #000', padding: '8px 6px', fontWeight: 'bold', fontSize: '13px', width: '14%' }}>Neck</th>
             </tr>
           </thead>
           <tbody>
             <tr>
-              <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Right (OD)</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_sphere || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_cylinder || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_axis || '-'}</td>
-              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_add || '-'}</td>
+              <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Top</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].top_length || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].shoulder || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].chest || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].top_waist || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].sleeve || '-'}</td>
+              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].neck || '-'}</td>
             </tr>
             <tr>
-              <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Left (OS)</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_sphere || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_cylinder || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_axis || '-'}</td>
-              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_add || '-'}</td>
+              <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Bottom</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].bottom_length || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>-</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].hip ? order.measurements[0].hip + ' (Hip)' : '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].bottom_waist || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].thigh ? order.measurements[0].thigh + ' (Thigh)' : '-'}</td>
+              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].bottom ? order.measurements[0].bottom + ' (Bottom)' : '-'}</td>
             </tr>
           </tbody>
         </table>

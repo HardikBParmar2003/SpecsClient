@@ -4,7 +4,7 @@ import { toast } from 'react-hot-toast';
 import { db } from '../services/db';
 import { AuthContext } from '../context/AuthContext';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
-import PrescriptionForm from '../components/shared/PrescriptionForm';
+import MeasurementForm from '../components/shared/MeasurementForm';
 import ProductCard from '../components/shared/ProductCard';
 import VirtualTryOn from '../components/shared/VirtualTryOn';
 import { HiOutlineCamera, HiOutlineChevronLeft, HiOutlineChevronRight } from 'react-icons/hi2';
@@ -18,8 +18,8 @@ const ProductDetailPage = () => {
   const [similarProducts, setSimilarProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [quantity, setQuantity] = useState(1);
-  const [showPrescription, setShowPrescription] = useState(false);
-  const [prescription, setPrescription] = useState({});
+  const [showMeasurement, setShowMeasurement] = useState(false);
+  const [measurement, setMeasurement] = useState({});
   const [selectedColor, setSelectedColor] = useState('');
   const [mainImageIdx, setMainImageIdx] = useState(0);
   const [isVtoOpen, setIsVtoOpen] = useState(false);
@@ -241,15 +241,15 @@ const ProductDetailPage = () => {
 
           <div className="border-t border-[var(--border-color)] pt-8 mb-8">
             <button 
-              onClick={() => setShowPrescription(!showPrescription)}
+              onClick={() => setShowMeasurement(!showMeasurement)}
               className="text-luxury-gold text-sm tracking-widest uppercase hover:text-[var(--text-primary)] transition-colors flex items-center mb-6"
             >
-              {showPrescription ? '- Hide Prescription Form' : '+ Add Eye Prescription (Optional)'}
+              {showMeasurement ? '- Hide Measurement Form' : '+ Add Measurements (Optional)'}
             </button>
             
-            {showPrescription && (
+            {showMeasurement && (
               <div className="mb-8 animate-fade-in-up">
-                <PrescriptionForm prescription={prescription} setPrescription={setPrescription} />
+                <MeasurementForm measurement={measurement} setMeasurement={setMeasurement} />
               </div>
             )}
           </div>

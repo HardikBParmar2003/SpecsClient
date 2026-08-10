@@ -99,11 +99,11 @@ const AdminCustomers = () => {
       const userOrders = await db.orders.where({ user_id: customerId }).toArray();
       const orderIds = userOrders.map(o => o.id);
 
-      await db.transaction('rw', db.users, db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+      await db.transaction('rw', db.users, db.orders, db.order_items, db.measurements, db.reminders_log, async () => {
         // Delete all associated items for these orders
         for (const oId of orderIds) {
           await db.order_items.where({ order_id: oId }).delete();
-          await db.eye_prescriptions.where({ order_id: oId }).delete();
+          await db.measurements.where({ order_id: oId }).delete();
           await db.reminders_log.where({ order_id: oId }).delete();
         }
         // Delete the orders
@@ -273,7 +273,7 @@ const AdminCustomers = () => {
         onClose={() => setConfirmModalData({ isOpen: false, idToDelete: null })}
         onConfirm={handleDeleteCustomer}
         title="Delete Customer"
-        message="Are you sure you want to permanently delete this customer? This action will also securely delete ALL their orders, prescriptions, and order history. This cannot be undone."
+        message="Are you sure you want to permanently delete this customer? This action will also securely delete ALL their orders, measurements, and order history. This cannot be undone."
       />
     </div>
   );

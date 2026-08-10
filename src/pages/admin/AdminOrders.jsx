@@ -41,7 +41,7 @@ const AdminOrders = () => {
       const mappedOrders = await Promise.all(paginatedOrders.map(async (o) => {
         const user = await db.users.get(o.user_id);
         const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
-        const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+        const measurements = await db.measurements.where({ order_id: o.id }).toArray();
         
         return {
           id: o.id.toString(),
@@ -60,7 +60,7 @@ const AdminOrders = () => {
           glass_price: o.glass_price,
           bill_number: o.bill_number,
           order_items: orderItems,
-          eye_prescriptions: prescriptions
+          measurements: measurements
         };
       }));
       setOrders(mappedOrders);
@@ -89,10 +89,10 @@ const AdminOrders = () => {
       const orderId = Number(confirmModalData.idToDelete);
       if (isNaN(orderId)) throw new Error('Invalid Order ID');
       
-      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+      await db.transaction('rw', db.orders, db.order_items, db.measurements, db.reminders_log, async () => {
         await db.orders.delete(orderId);
         await db.order_items.where({ order_id: orderId }).delete();
-        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.measurements.where({ order_id: orderId }).delete();
         await db.reminders_log.where({ order_id: orderId }).delete();
       });
       toast.success('Order deleted successfully');

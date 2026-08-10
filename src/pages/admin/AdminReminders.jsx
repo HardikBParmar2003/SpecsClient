@@ -67,7 +67,7 @@ const AdminReminders = () => {
     <div>
       <div className="mb-8 border-b border-[var(--border-color)] pb-6">
         <h1 className="text-2xl font-light tracking-widest uppercase">Retention Reminders</h1>
-        <p className="text-sm text-[var(--text-muted)] mt-2">Automated system identifies customers due for an eye check-up.</p>
+        <p className="text-sm text-[var(--text-muted)] mt-2">Automated system identifies customers due for an measurement check.</p>
       </div>
 
       <div className="glassmorphism rounded-xl border border-[var(--border-color)] overflow-hidden">
@@ -90,7 +90,7 @@ const AdminReminders = () => {
               </thead>
               <tbody className="divide-y divide-[var(--border-color)]">
                 {reminders.map((rem) => {
-                  const messageText = encodeURIComponent(`👓 *ખાસ યાદ - ${shopConfig.reminderShopName}* 🙏\n\nનમસ્તે ${rem.name} જી,\n\nઆશા છે કે તમે કુશળ હશો. તમે છેલ્લે તારીખ  ${new Date(rem.order_date).toLocaleDateString('en-GB')}  ના રોજ અમારા ${shopConfig.reminderShopName} ચશ્માઘર પરથી ચશ્મા ખરીદ્યા હતા.\n\nઆંખોની સારી તંદુરસ્તી અને નંબરની ચોકસાઈ જાળવી રાખવા માટે, સમયસર આઈ-ચેકઅપ (Eye Check-up) કરાવી લેવું ખૂબ જ હિતાવહ છે. બસ, તમારી આંખોની કાળજીના ભાગરૂપે જ અમે તમને આ નાની યાદ અપાવી રહ્યા છીએ.\n\nતમને જ્યારે પણ અનુકૂળતા હોય ત્યારે પધારવા વિનંતી છે. અમને ${shopConfig.reminderShopName} ચશ્માઘર પરિવાર વતી તમારી ફરી સેવા કરવાનો અને અમારું નવું કલેક્શન બતાવવાનો ખૂબ આનંદ થશે! ✨`);
+                  const messageText = encodeURIComponent(`👓 *ખાસ યાદ - ${shopConfig.reminderShopName}* 🙏\n\nનમસ્તે ${rem.name} જી,\n\nઆશા છે કે તમે કુશળ હશો. તમે છેલ્લે તારીખ  ${new Date(rem.order_date).toLocaleDateString('en-GB')}  ના રોજ અમારા ${shopConfig.reminderShopName} કપડાંઘર પરથી કપડાં ખરીદ્યા હતા.\n\nઆંખોની સારી તંદુરસ્તી અને નંબરની ચોકસાઈ જાળવી રાખવા માટે, સમયસર નવા માપ (New Measurements) કરાવી લેવું ખૂબ જ હિતાવહ છે. બસ, તમારી આંખોની કાળજીના ભાગરૂપે જ અમે તમને આ નાની યાદ અપાવી રહ્યા છીએ.\n\nતમને જ્યારે પણ અનુકૂળતા હોય ત્યારે પધારવા વિનંતી છે. અમને ${shopConfig.reminderShopName} કપડાંઘર પરિવાર વતી તમારી ફરી સેવા કરવાનો અને અમારું નવું કલેક્શન બતાવવાનો ખૂબ આનંદ થશે! ✨`);
                   const waUrl = `https://wa.me/${rem.mobile}?text=${messageText}`;
                   return (
                   <tr key={rem.order_id} className="hover:bg-[var(--bg-card)] transition-colors">

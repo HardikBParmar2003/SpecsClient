@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { db } from '../../services/db';
-import PrescriptionForm from '../../components/shared/PrescriptionForm';
+import MeasurementForm from '../../components/shared/MeasurementForm';
 import CustomSelect from '../../components/shared/CustomSelect';
 
 const AdminPOS = () => {
@@ -9,33 +9,33 @@ const AdminPOS = () => {
     name: '',
     email: '',
     mobile: '',
-    frame_type: 'Full Rim',
-    frame_name: '',
-    frame_cost: 0,
-    glass_type: '',
-    glass_cost: 0,
+    outfit_type: 'Shirt',
+    item_description: '',
+    amount: 0,
+    fabric_type: '',
+    
     discount: 0,
-    reminder_months: 12,
+    
     status: 'pending',
     pay_status: 'pending',
-    advance: 0,
-    advance_online: 0,
+    
+    
     bill_number: ''
   });
   
-  const [prescription, setPrescription] = useState({});
+  const [measurement, setMeasurement] = useState({});
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const frameCost = parseFloat(formData.frame_cost) || 0;
-  const glassCost = parseFloat(formData.glass_cost) || 0;
+  const amount = parseFloat(formData.amount) || 0;
+  
   const discount = parseFloat(formData.discount) || 0;
-  const advance = parseFloat(formData.advance) || 0;
-  const advance_online = parseFloat(formData.advance_online) || 0;
-  const totalAdvance = advance + advance_online;
-  const totalCost = frameCost + glassCost - discount;
+  
+  
+  const totalAdvance = 0;
+  const totalCost = amount - discount;
   const balance = Math.max(0, totalCost - totalAdvance);
 
   const handleSubmit = async (e) => {
@@ -65,12 +65,12 @@ const AdminPOS = () => {
         user_id: customer.id,
         ord_type: 'walk-in',
         status: formData.status,
-        frame_price: frameCost,
-        glass_price: glassCost,
+        frame_price: amount,
+        glass_price: 0,
         discount: discount,
         total_price: totalCost,
-        advance: advance,
-        advance_online: advance_online,
+        advance: 0,
+        advance_online: 0,
         pay_status: formData.pay_status,
         pay_method: 'cash',
         bill_number: formData.bill_number,
@@ -83,20 +83,20 @@ const AdminPOS = () => {
       // 3. Create Order Item
       await db.order_items.add({
         order_id: orderId,
-        custom_frame_name: formData.frame_name,
-        glass_type: formData.glass_type,
-        unit_price: frameCost + glassCost,
+        custom_item_name: formData.item_description,
+        fabric_type: formData.fabric_type,
+        unit_price: amount,
         quantity: 1,
         created_at: new Date()
       });
 
-      // 4. Create Eye Prescription (if filled)
-      if (prescription.od_sphere || prescription.os_sphere) {
-        await db.eye_prescriptions.add({
+      // 4. Create Measurements (if filled)
+      if (measurement.od_sphere || measurement.os_sphere) {
+        await db.measurements.add({
           user_id: customer.id,
           order_id: orderId,
-          ...prescription,
-          prescription_date: new Date(),
+          ...measurement,
+          measurement_date: new Date(),
           created_at: new Date()
         });
       }
@@ -104,11 +104,11 @@ const AdminPOS = () => {
       toast.success('Walk-in order created successfully!');
       // Reset form
       setFormData({
-        name: '', email: '', mobile: '', frame_type: 'Full Rim', frame_name: '',
-        frame_cost: 0, glass_type: '', glass_cost: 0, discount: 0, advance: 0, advance_online: 0, reminder_months: 12,
+        name: '', email: '', mobile: '', outfit_type: 'Shirt', item_description: '',
+        amount: 0, fabric_type: '', glass_cost: 0, discount: 0, advance: 0, advance_online: 0, 
         status: 'pending', pay_status: 'pending', bill_number: ''
       });
-      setPrescription({});
+      setMeasurement({});
 
     } catch (err) {
       toast.error('Failed to create order');
@@ -151,41 +151,29 @@ const AdminPOS = () => {
           <h2 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)] mb-6 border-b border-[var(--border-color)] pb-2">2. Product Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Type</label>
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Outfit Type</label>
               <CustomSelect 
-                name="frame_type" 
-                value={formData.frame_type} 
+                name="outfit_type" 
+                value={formData.outfit_type} 
                 onChange={handleChange} 
                 options={[
-                  {value: "Full Rim", label: "Full Rim"},
-                  {value: "Half Rim", label: "Half Rim"},
-                  {value: "Rimless", label: "Rimless"}
+                  {value: "Shirt", label: "Shirt"},
+                  {value: "Trouser", label: "Trouser"},
+                  {value: "Suit", label: "Suit"},
+                  {value: "Kurta", label: "Kurta"},
+                  {value: "Pajama", label: "Pajama"},
+                  {value: "Sherwani", label: "Sherwani"},
+                  {value: "Other", label: "Other"}
                 ]}
               />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Name / Description</label>
-              <input type="text" name="frame_name" value={formData.frame_name} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Item Description</label>
+              <input type="text" name="item_description" value={formData.item_description} onChange={handleChange} placeholder="e.g. Slim fit, White buttons" className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Glass Type</label>
-              <input type="text" name="glass_type" placeholder="e.g. Single Vision Blue Cut" value={formData.glass_type} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Reminder Duration</label>
-              <CustomSelect 
-                name="reminder_months" 
-                value={formData.reminder_months} 
-                onChange={handleChange} 
-                options={[
-                  {value: 3, label: "3 Months"},
-                  {value: 6, label: "6 Months"},
-                  {value: 9, label: "9 Months"},
-                  {value: 12, label: "12 Months"},
-                  {value: 18, label: "18 Months"},
-                  {value: 24, label: "24 Months"}
-                ]}
-              />
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Fabric Details</label>
+              <input type="text" name="fabric_type" placeholder="e.g. Cotton, Linen, Client's Fabric" value={formData.fabric_type} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Order Status</label>
@@ -217,45 +205,28 @@ const AdminPOS = () => {
           </div>
         </div>
 
-        {/* Section 4: Eye Prescription */}
+        {/* Section 4: Measurements */}
         <div className="glassmorphism p-6 rounded-xl border border-[var(--border-color)]">
-          <h2 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)] mb-6 border-b border-[var(--border-color)] pb-2">3. Eye Prescription</h2>
-          <PrescriptionForm prescription={prescription} setPrescription={setPrescription} />
+          <h2 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)] mb-6 border-b border-[var(--border-color)] pb-2">3. Measurements</h2>
+          <MeasurementForm measurement={measurement} setMeasurement={setMeasurement} />
         </div>
 
         {/* Section 3: Billing */}
         <div className="glassmorphism p-6 rounded-xl border border-luxury-gold/30 bg-luxury-gold/5">
           <h2 className="text-sm font-medium tracking-widest uppercase text-luxury-gold mb-6 border-b border-luxury-gold/20 pb-2">4. Billing Summary</h2>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-end">
             <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Cost (₹)</label>
-              <input type="number" name="frame_cost" value={formData.frame_cost} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Glass Cost (₹)</label>
-              <input type="number" name="glass_cost" value={formData.glass_cost} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
+              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Total Amount (₹)</label>
+              <input type="number" name="amount" value={formData.amount} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
             <div>
               <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Discount (₹)</label>
               <input type="number" name="discount" value={formData.discount} onChange={handleChange} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
             </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Offline) (₹)</label>
-              <input type="number" name="advance" value={formData.advance} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${totalAdvance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
-            </div>
-            <div>
-              <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Advance (Online) (₹)</label>
-              <input type="number" name="advance_online" value={formData.advance_online} onChange={handleChange} className={`w-full bg-[var(--input-bg)] border rounded px-4 py-2 text-[var(--input-text)] focus:outline-none transition-colors ${totalAdvance > totalCost ? 'border-red-500 focus:border-red-500' : 'border-[var(--input-border)] focus:border-luxury-gold'}`} />
-            </div>
-            {totalAdvance > totalCost && <p className="text-red-500 text-xs mt-1 col-span-1 md:col-span-5">Total advance exceeds total amount!</p>}
-            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 col-span-1 md:col-span-5 flex justify-between items-center mt-4">
+            <div className="bg-[var(--input-bg)] p-4 rounded-lg border border-luxury-gold/20 col-span-1 md:col-span-2 flex justify-between items-center mt-4">
               <div className="flex flex-col">
-                <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Total Amount</span>
+                <span className="text-xs uppercase tracking-widest text-[var(--text-muted)]">Final Total</span>
                 <span className="text-xl font-light text-[var(--text-primary)]">₹{totalCost.toFixed(2)}</span>
-              </div>
-              <div className="flex flex-col text-right">
-                <span className="text-xs uppercase tracking-widest text-[var(--text-muted)] text-luxury-gold">Balance Due</span>
-                <span className="text-2xl font-light text-luxury-gold">₹{balance.toFixed(2)}</span>
               </div>
             </div>
           </div>

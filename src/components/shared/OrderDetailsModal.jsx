@@ -30,14 +30,14 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
   const discount = parseFloat(order.discount || 0);
   const advance = parseFloat(order.advance || 0);
   const advanceOnline = parseFloat(order.advance_online || 0);
-  const totalAdvance = advance + advanceOnline;
+  const totalAdvance = 0;
   
   // Use order.amount if available (from AdminDashboard/AdminOrders), else order.total_price (AdminCustomerOrders)
   const finalTotal = parseFloat(order.amount !== undefined ? order.amount : order.total_price || 0);
 
-  // According to user: "total as specs cost frame cost plus glass cost that one field of total or sub total whatever"
+  // According to user: "total as specs cost Material Cost plus Making Charge that one field of total or sub total whatever"
   // Let's call it "Sub Total"
-  // If framePrice + glassPrice > 0, we can use that, otherwise if there's no frame/glass price but there are items, 
+  // If framePrice + glassPrice > 0, we can use that, otherwise if there's no frame/Making Charge but there are items, 
   // we could just fallback to finalTotal + discount.
   const calculatedSubTotal = framePrice + glassPrice;
   const subTotal = calculatedSubTotal > 0 ? calculatedSubTotal : (finalTotal + discount);
@@ -49,16 +49,16 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
   if (formattedPhone.length === 10) formattedPhone = `91${formattedPhone}`;
   
   const customerNameStr = order.customerName || 'Customer';
-  let itemsText = 'Spectacles';
+  let itemsText = 'Custom Outfits';
   if (order.order_items && order.order_items.length > 0) {
     itemsText = order.order_items.map(item => {
-      const frameName = item.custom_frame_name || item.product?.name || item.product_name || 'Item';
-      const glassType = item.glass_type ? ` with ${item.glass_type}.` : '';
+      const frameName = item.custom_item_name || item.product?.name || item.product_name || 'Item';
+      const glassType = item.fabric_type ? ` with ${item.fabric_type}.` : '';
       return frameName + glassType;
     }).join(', ');
   }
   
-  const messageText = encodeURIComponent(`✨ Welcome to ${shopConfig.shopName}! ✨\n\nHello M/s ${customerNameStr},\nThank you for shopping with us! Here are your order details:\n\n👓 Items: ${itemsText}\n💰 Total Price: ₹${finalTotal.toFixed(2)}\n💳 Advance Paid: ₹${totalAdvance.toFixed(2)}\n⏳ Balance Due: ₹${balance.toFixed(2)}\n\nWe appreciate your business. Please do visit again! 🙏😊`);
+  const messageText = encodeURIComponent(`✨ Welcome to ${shopConfig.shopName}! ✨\n\nHello M/s ${customerNameStr},\nThank you for shopping with us! Here are your order details:\n\n👕 Items: ${itemsText}\n💰 Total Price: ₹${finalTotal.toFixed(2)}\n\nWe appreciate your business. Please do visit again! 🙏😊`);
   
   const whatsappUrl = formattedPhone ? `https://wa.me/${formattedPhone}?text=${messageText}` : '#';
 
@@ -175,8 +175,8 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
                     <div className="flex items-center gap-3">
                       {item.product_image && <img src={item.product_image} alt="" className="w-10 h-10 rounded object-cover" />}
                       <div>
-                        <p className="text-[var(--text-primary)] text-sm">{item.custom_frame_name || item.product?.name || item.product_name || 'Unknown Item'}</p>
-                        {item.glass_type && <p className="text-[var(--text-muted)] text-xs mt-1">Glass: {item.glass_type}</p>}
+                        <p className="text-[var(--text-primary)] text-sm">{item.custom_item_name || item.product?.name || item.product_name || 'Unknown Item'}</p>
+                        {item.fabric_type && <p className="text-[var(--text-muted)] text-xs mt-1">Glass: {item.fabric_type}</p>}
                       </div>
                     </div>
                     <div className="text-right">
@@ -189,39 +189,42 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
             </div>
           )}
 
-          {/* Eye Prescription */}
-          {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+          {/* Measurements */}
+          {order.measurements && order.measurements.length > 0 && (
             <div className="mt-8">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Eye Prescription</h4>
-              {order.eye_prescriptions.map((p, idx) => (
+              <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Measurements</h4>
+              {order.measurements.map((p, idx) => (
                 <div key={idx} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-4 overflow-x-auto mb-4">
                   <table className="w-full text-xs text-center">
                     <thead className="text-[var(--text-muted)] border-b border-[var(--border-color)]">
                       <tr>
-                        <th className="py-2 text-left">Eye</th>
-                        <th className="py-2">SPH</th>
-                        <th className="py-2">CYL</th>
-                        <th className="py-2">AXIS</th>
-                        <th className="py-2">ADD</th>
-                        {/* <th className="py-2">PD</th> */}
+                        <th className="py-2 text-left">Part</th>
+                        <th className="py-2">Length</th>
+                        <th className="py-2">Shoulder</th>
+                        <th className="py-2">Chest</th>
+                        <th className="py-2">Waist</th>
+                        <th className="py-2">Sleeve</th>
+                        <th className="py-2">Neck</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border-color)]">
                       <tr>
-                        <td className="py-3 text-left font-medium text-luxury-gold">Right (OD)</td>
-                        <td className="py-3">{p.od_sphere || '-'}</td>
-                        <td className="py-3">{p.od_cylinder || '-'}</td>
-                        <td className="py-3">{p.od_axis || '-'}</td>
-                        <td className="py-3">{p.od_add || '-'}</td>
-                        {/* <td className="py-3">{p.od_pd || '-'}</td> */}
+                        <td className="py-3 text-left font-medium text-luxury-gold">Top</td>
+                        <td className="py-3">{p.top_length || '-'}</td>
+                        <td className="py-3">{p.shoulder || '-'}</td>
+                        <td className="py-3">{p.chest || '-'}</td>
+                        <td className="py-3">{p.top_waist || '-'}</td>
+                        <td className="py-3">{p.sleeve || '-'}</td>
+                        <td className="py-3">{p.neck || '-'}</td>
                       </tr>
                       <tr>
-                        <td className="py-3 text-left font-medium text-luxury-gold">Left (OS)</td>
-                        <td className="py-3">{p.os_sphere || '-'}</td>
-                        <td className="py-3">{p.os_cylinder || '-'}</td>
-                        <td className="py-3">{p.os_axis || '-'}</td>
-                        <td className="py-3">{p.os_add || '-'}</td>
-                        {/* <td className="py-3">{p.os_pd || '-'}</td> */}
+                        <td className="py-3 text-left font-medium text-luxury-gold">Bottom</td>
+                        <td className="py-3">{p.bottom_length || '-'}</td>
+                        <td className="py-3">-</td>
+                        <td className="py-3">{p.hip ? p.hip + ' (Hip)' : '-'}</td>
+                        <td className="py-3">{p.bottom_waist || '-'}</td>
+                        <td className="py-3">{p.thigh ? p.thigh + ' (Thigh)' : '-'}</td>
+                        <td className="py-3">{p.bottom ? p.bottom + ' (Bottom)' : '-'}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -235,14 +238,14 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
             <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Financial Summary</h4>
             
             <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Frame Cost</span>
+              <span className="text-[var(--text-secondary)] text-sm">Material Cost</span>
               <span className="text-[var(--text-primary)] text-sm">₹{parseFloat(order.frame_price || 0).toFixed(2)}</span>
             </div>
 
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Glass Cost</span>
+            {/* <div className="flex justify-between items-center mb-2">
+              <span className="text-[var(--text-secondary)] text-sm">Making Charge</span>
               <span className="text-[var(--text-primary)] text-sm">₹{parseFloat(order.glass_price || 0).toFixed(2)}</span>
-            </div>
+            </div> */}
 
             <div className="flex justify-between items-center mb-2">
               <span className="text-[var(--text-secondary)] text-sm">Sub Total (Specs Cost)</span>

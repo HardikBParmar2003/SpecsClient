@@ -30,14 +30,15 @@ const Navbar = () => {
                 {/* Big Middle */}
                 <span className="text-2xl font-bold uppercase tracking-wide leading-none my-1">
                   {/* SHIVNETRA */}
-                  OPTIC PALACE
+                  {/* OPTIC PALACE */}
                   {/* SUPER OPTICS */}
+                  FRIEND'S TAILORS
                 </span>
                 
                 {/* Bottom Right */}
                 <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.25em] font-medium mt-[-2px] mr-1 self-end">
                   {/* CHASHMAGHAR */}
-                  CONTACT LENS CLINIC
+                  {/* CONTACT LENS CLINIC */}
                 </span>
               </div>            
                 </Link>

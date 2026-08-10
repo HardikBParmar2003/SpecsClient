@@ -12,7 +12,7 @@ db.version(2).stores({
   cart_items: '++id, user_id, product_id, [user_id+product_id]', // Compound index for unique cart item
   orders: '++id, user_id, status, pay_status, reminder_date',
   order_items: '++id, order_id, product_id',
-  eye_prescriptions: '++id, user_id, order_id',
+  measurements: '++id, user_id, order_id',
   reminders_log: '++id, user_id, order_id, status, scheduled_date',
   parties: '++id, name, phone',
   purchases: '++id, party_id, date',

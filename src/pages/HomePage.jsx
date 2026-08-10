@@ -25,16 +25,17 @@ const HomePage = () => {
             </span> */}
             <span className="text-5xl md:text-7xl font-bold uppercase tracking-wide leading-none my-1 md:my-2">
               {/* SHIVNETRA */}
-              OPTIC PALACE
+              {/* OPTIC PALACE */}
               {/* SUPER OPTICS */}
+              FRIEND'S TAILORS
             </span>
             <span className="text-sm md:text-xl uppercase tracking-[0.25em] font-medium mt-[-4px] md:mt-[-8px] mr-1 md:mr-2  self-end">
               {/* CHASHMAGHAR */}
-              CONTACT LENS CLINIC
+              {/* CONTACT LENS CLINIC */}
             </span>
           </h1>
           <p className="text-lg md:text-2xl text-white/80 font-light tracking-widest mb-10 animate-fade-in-up animation-delay-200">
-            PREMIUM EYEWEAR SINCE 1990
+            {/* PREMIUM EYEWEAR SINCE 1990 */}
           </p>
           <div className="animate-fade-in-up animation-delay-400 flex flex-col sm:flex-row justify-center gap-4">
             {user?.role === 'admin' ? (
