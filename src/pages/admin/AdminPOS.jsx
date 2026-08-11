@@ -92,7 +92,11 @@ const AdminPOS = () => {
       });
 
       // 4. Create Eye Prescription (if filled)
-      if (prescription.od_sphere || prescription.os_sphere) {
+      if (
+        prescription.od_sphere || prescription.od_cylinder || prescription.od_axis || prescription.od_add ||
+        prescription.os_sphere || prescription.os_cylinder || prescription.os_axis || prescription.os_add ||
+        prescription.notes
+      ) {
         await db.eye_prescriptions.add({
           user_id: customer.id,
           order_id: orderId,

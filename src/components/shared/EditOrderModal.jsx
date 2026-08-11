@@ -100,7 +100,11 @@ const EditOrderModal = ({ order, onClose, onUpdate }) => {
       // Overwrite prescriptions
       await db.eye_prescriptions.where({ order_id: orderId }).delete();
       for (const p of prescriptions) {
-        if (p.od_sphere || p.os_sphere) {
+        if (
+          p.od_sphere || p.od_cylinder || p.od_axis || p.od_add ||
+          p.os_sphere || p.os_cylinder || p.os_axis || p.os_add ||
+          p.notes
+        ) {
           await db.eye_prescriptions.add({
             user_id: realOrder.user_id,
             order_id: orderId,
