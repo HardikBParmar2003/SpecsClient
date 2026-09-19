@@ -2,8 +2,13 @@ import { Link } from 'react-router-dom';
 import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { shopConfig } from '../config/shop.js';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../services/db';
+
 const HomePage = () => {
   const { user } = useContext(AuthContext);
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
 
   return (
     <div>
@@ -20,17 +25,8 @@ const HomePage = () => {
         
         <div className="relative z-10 text-center px-4 max-w-4xl mx-auto">
           <h1 className="inline-flex flex-col items-start text-gradient mb-6 animate-fade-in-up">
-            {/* <span className="text-sm md:text-xl uppercase tracking-[0.3em] font-medium mb-[-4px] md:mb-[-8px] ml-1 md:ml-2">
-              SHREE
-            </span> */}
-            <span className="text-5xl md:text-7xl font-bold uppercase tracking-wide leading-none my-1 md:my-2">
-              {/* SHIVNETRA */}
-              OPTIC PALACE
-              {/* SUPER OPTICS */}
-            </span>
-            <span className="text-sm md:text-xl uppercase tracking-[0.25em] font-medium mt-[-4px] md:mt-[-8px] mr-1 md:mr-2  self-end">
-              {/* CHASHMAGHAR */}
-              CONTACT LENS CLINIC
+            <span className="text-4xl md:text-6xl font-bold uppercase tracking-wide leading-tight my-1 md:my-2 text-center">
+              {customShopConfig.shopName}
             </span>
           </h1>
           <p className="text-lg md:text-2xl text-white/80 font-light tracking-widest mb-10 animate-fade-in-up animation-delay-200">

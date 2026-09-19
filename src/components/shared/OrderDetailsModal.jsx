@@ -3,8 +3,12 @@ import { HiX, HiOutlinePencil, HiOutlineDownload, HiOutlineShare } from 'react-i
 import PdfGenerator from '../../templates/PdfGenerator';
 import toast from 'react-hot-toast';
 import { shopConfig } from '../../config/shop';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../services/db';
 
 const OrderDetailsModal = ({ order, onClose, onEdit }) => {
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
   const pdfRef = useRef();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
@@ -25,8 +29,8 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
   if (!order) return null;
 
   // Calculate values
-  const framePrice = parseFloat(order.frame_price || 0);
-  const glassPrice = parseFloat(order.glass_price || 0);
+  const framePrice = parseFloat(order.fabric_price || 0);
+  const glassPrice = parseFloat(order.stitching_price || 0);
   const discount = parseFloat(order.discount || 0);
   const advance = parseFloat(order.advance || 0);
   const advanceOnline = parseFloat(order.advance_online || 0);
@@ -49,16 +53,13 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
   if (formattedPhone.length === 10) formattedPhone = `91${formattedPhone}`;
   
   const customerNameStr = order.customerName || 'Customer';
-  let itemsText = 'Spectacles';
-  if (order.order_items && order.order_items.length > 0) {
-    itemsText = order.order_items.map(item => {
-      const frameName = item.custom_frame_name || item.product?.name || item.product_name || 'Item';
-      const glassType = item.glass_type ? ` with ${item.glass_type}.` : '';
-      return frameName + glassType;
-    }).join(', ');
-  }
+  let garmentsArr = [];
+  if (order.shirt_qty) garmentsArr.push(`${order.shirt_qty} Shirt(s)`);
+  if (order.pant_qty) garmentsArr.push(`${order.pant_qty} Pant(s)`);
   
-  const messageText = encodeURIComponent(`✨ Welcome to ${shopConfig.shopName}! ✨\n\nHello M/s ${customerNameStr},\nThank you for shopping with us! Here are your order details:\n\n👓 Items: ${itemsText}\n💰 Total Price: ₹${finalTotal.toFixed(2)}\n💳 Advance Paid: ₹${totalAdvance.toFixed(2)}\n⏳ Balance Due: ₹${balance.toFixed(2)}\n\nWe appreciate your business. Please do visit again! 🙏😊`);
+  let garmentsText = garmentsArr.length > 0 ? garmentsArr.join(', ') : 'Custom Tailoring';
+  
+  const messageText = encodeURIComponent(`✨ Greetings from ${customShopConfig.shopName || customShopConfig.shortName}! ✨\n\nHello M/s ${customerNameStr},\nThank you for trusting us with your custom tailoring! Here is the summary of your stitching order:\n\n👕 Garments: ${garmentsText}\n💰 Total Amount: ₹${finalTotal.toFixed(2)}\n💳 Advance Paid: ₹${totalAdvance.toFixed(2)}\n⏳ Balance Due: ₹${balance.toFixed(2)}\n\nWe look forward to delivering your perfect fit! 🪡✨`);
   
   const whatsappUrl = formattedPhone ? `https://wa.me/${formattedPhone}?text=${messageText}` : '#';
 
@@ -81,9 +82,21 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
                 </span>
               )}
             </div>
-            <p className="text-sm text-[var(--text-muted)] mt-1">
-              {new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}
-            </p>
+            <div className="flex items-center gap-4 mt-2 bg-[var(--input-bg)]/50 w-fit px-3 py-1.5 rounded-lg border border-[var(--border-color)]/50">
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">Order Date</span>
+                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                  {order.order_date ? new Date(order.order_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}
+                </span>
+              </div>
+              <div className="w-px h-6 bg-[var(--border-color)]/50"></div>
+              <div className="flex flex-col">
+                <span className="text-[9px] uppercase tracking-widest text-[var(--text-muted)]">Delivery Date</span>
+                <span className="text-xs text-[var(--text-primary)] font-medium">
+                  {order.delivery_date ? new Date(order.delivery_date).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' }) : 'Not set'}
+                </span>
+              </div>
+            </div>
           </div>
           
           <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto">
@@ -122,19 +135,19 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
         
         <div className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-[var(--bg-primary)]">
           <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-5">
-            <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-4">
-              <div className="flex items-center gap-3">
-                {order.customerName && (
-                  <>
-                    <div className="w-10 h-10 rounded-full bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold text-lg">
-                      {order.customerName.charAt(0).toUpperCase()}
-                    </div>
-                    <div>
-                      <h3 className="text-[var(--text-primary)] font-medium text-base">{order.customerName}</h3>
-                      <p className="text-[var(--text-muted)] text-xs">{order.mobile || order.customer_mobile}</p>
-                    </div>
-                  </>
-                )}
+            <div className="flex flex-col sm:flex-row justify-between sm:items-start gap-4 mb-4">
+              <div className="flex items-center gap-3 sm:gap-4">
+                {order.photo ? (
+                  <img src={order.photo} alt="Reference" className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl object-cover border border-[var(--border-color)] shadow-sm flex-shrink-0" />
+                ) : order.customerName ? (
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-luxury-gold/20 flex items-center justify-center text-luxury-gold font-bold text-lg flex-shrink-0">
+                    {order.customerName.charAt(0).toUpperCase()}
+                  </div>
+                ) : null}
+                <div>
+                  <h3 className="text-[var(--text-primary)] font-medium text-base">{order.customerName}</h3>
+                  <p className="text-[var(--text-muted)] text-xs mt-0.5">{order.mobile || order.customer_mobile}</p>
+                </div>
               </div>
               <div className="flex flex-col sm:items-end gap-2">
                 <span className={`inline-flex items-center justify-center leading-none px-3 py-1.5 rounded text-xs uppercase tracking-widest font-bold ${
@@ -145,17 +158,11 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
                 }`}>
                   {order.status}
                 </span>
-                <span className="text-[var(--text-muted)] text-xs uppercase tracking-wider">
-                  {(order.type || order.ord_type || '').replace('_', ' ')} Order
-                </span>
+
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 mt-6 pt-6 border-t border-[var(--border-color)]">
-              <div>
-                <span className="text-[var(--text-muted)] text-xs uppercase tracking-widest block mb-1">Payment Method</span>
-                <span className="text-[var(--text-primary)] text-sm font-medium uppercase">{order.pay_method || '-'}</span>
-              </div>
+            <div className="mt-6 pt-6 border-t border-[var(--border-color)]">
               <div>
                 <span className="text-[var(--text-muted)] text-xs uppercase tracking-widest block mb-1">Payment Status</span>
                 <span className={`text-sm font-medium uppercase ${order.pay_status === 'completed' ? 'text-green-400' : 'text-yellow-400'}`}>
@@ -165,116 +172,79 @@ const OrderDetailsModal = ({ order, onClose, onEdit }) => {
             </div>
           </div>
 
-          {/* Order Items */}
-          {order.order_items && order.order_items.length > 0 && (
-            <div className="mt-8">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Order Items</h4>
-              <div className="space-y-3">
-                {order.order_items.map((item, idx) => (
-                  <div key={idx} className="flex justify-between items-center p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg">
-                    <div className="flex items-center gap-3">
-                      {item.product_image && <img src={item.product_image} alt="" className="w-10 h-10 rounded object-cover" />}
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-6">
+              {/* Order Quantities */}
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Order Quantities</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-center">
+                    <p className="text-[var(--text-muted)] text-xs uppercase tracking-widest mb-1">Shirts</p>
+                    <p className="text-[var(--text-primary)] text-xl font-medium">{order.shirt_qty || 0}</p>
+                  </div>
+                  <div className="p-4 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg text-center">
+                    <p className="text-[var(--text-muted)] text-xs uppercase tracking-widest mb-1">Pants</p>
+                    <p className="text-[var(--text-primary)] text-xl font-medium">{order.pant_qty || 0}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Financial Summary */}
+              <div className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-5">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Financial Summary</h4>
+                
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[var(--text-secondary)] text-sm">Total Amount</span>
+                  <span className="text-xl font-medium text-[var(--text-primary)]">₹{finalTotal.toFixed(2)}</span>
+                </div>
+                
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-[var(--text-secondary)] text-sm">Paid Amount</span>
+                  <span className="text-green-400 text-sm">₹{totalAdvance.toFixed(2)}</span>
+                </div>
+
+                <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--border-color)] border-dashed">
+                  <span className="text-luxury-gold font-bold uppercase tracking-widest text-sm">Balance Due</span>
+                  <span className="text-2xl font-light text-luxury-gold">₹{balance.toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Measurement */}
+            {order.measurements && order.measurements.length > 0 && (
+              <div>
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Body Measurements</h4>
+                {order.measurements.map((p, idx) => (
+                  <div key={idx} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-5">
+                    <div className="grid grid-cols-2 gap-x-6 gap-y-4">
+                      {/* Top / Shirt */}
                       <div>
-                        <p className="text-[var(--text-primary)] text-sm">{item.custom_frame_name || item.product?.name || item.product_name || 'Unknown Item'}</p>
-                        {item.glass_type && <p className="text-[var(--text-muted)] text-xs mt-1">Glass: {item.glass_type}</p>}
+                        <h5 className="text-luxury-gold text-[10px] uppercase tracking-widest mb-3 pb-1 border-b border-[var(--border-color)]">Top / Shirt</h5>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Length:</span> <span className="text-[var(--text-primary)]">{p.top_length || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Chest:</span> <span className="text-[var(--text-primary)]">{p.chest || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Waist:</span> <span className="text-[var(--text-primary)]">{p.top_waist || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Shoulder:</span> <span className="text-[var(--text-primary)]">{p.shoulder || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Sleeves:</span> <span className="text-[var(--text-primary)]">{p.sleeves || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Neck:</span> <span className="text-[var(--text-primary)]">{p.neck || '-'}</span></li>
+                        </ul>
                       </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[var(--text-primary)] text-sm">₹{item.unit_price}</p>
-                      <p className="text-[var(--text-muted)] text-xs">Qty: {item.quantity}</p>
+                      {/* Bottom / Trouser */}
+                      <div>
+                        <h5 className="text-luxury-gold text-[10px] uppercase tracking-widest mb-3 pb-1 border-b border-[var(--border-color)]">Bottom / Trouser</h5>
+                        <ul className="space-y-2 text-sm">
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Length:</span> <span className="text-[var(--text-primary)]">{p.bottom_length || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Waist:</span> <span className="text-[var(--text-primary)]">{p.bottom_waist || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Hips:</span> <span className="text-[var(--text-primary)]">{p.hips || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Thigh:</span> <span className="text-[var(--text-primary)]">{p.thigh || '-'}</span></li>
+                          <li className="flex justify-between"><span className="text-[var(--text-muted)]">Bottom:</span> <span className="text-[var(--text-primary)]">{p.bottom || '-'}</span></li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
-          )}
-
-          {/* Eye Prescription */}
-          {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
-            <div className="mt-8">
-              <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Eye Prescription</h4>
-              {order.eye_prescriptions.map((p, idx) => (
-                <div key={idx} className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-4 overflow-x-auto mb-4">
-                  <table className="w-full text-xs text-center">
-                    <thead className="text-[var(--text-muted)] border-b border-[var(--border-color)]">
-                      <tr>
-                        <th className="py-2 text-left">Eye</th>
-                        <th className="py-2">SPH</th>
-                        <th className="py-2">CYL</th>
-                        <th className="py-2">AXIS</th>
-                        <th className="py-2">ADD</th>
-                        {/* <th className="py-2">PD</th> */}
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border-color)]">
-                      <tr>
-                        <td className="py-3 text-left font-medium text-luxury-gold">Right (OD)</td>
-                        <td className="py-3">{p.od_sphere || '-'}</td>
-                        <td className="py-3">{p.od_cylinder || '-'}</td>
-                        <td className="py-3">{p.od_axis || '-'}</td>
-                        <td className="py-3">{p.od_add || '-'}</td>
-                        {/* <td className="py-3">{p.od_pd || '-'}</td> */}
-                      </tr>
-                      <tr>
-                        <td className="py-3 text-left font-medium text-luxury-gold">Left (OS)</td>
-                        <td className="py-3">{p.os_sphere || '-'}</td>
-                        <td className="py-3">{p.os_cylinder || '-'}</td>
-                        <td className="py-3">{p.os_axis || '-'}</td>
-                        <td className="py-3">{p.os_add || '-'}</td>
-                        {/* <td className="py-3">{p.os_pd || '-'}</td> */}
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Financial Summary */}
-          <div className="mt-8 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-5">
-            <h4 className="text-xs font-semibold uppercase tracking-widest text-[var(--text-secondary)] mb-4 border-b border-[var(--border-color)] pb-2">Financial Summary</h4>
-            
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Frame Cost</span>
-              <span className="text-[var(--text-primary)] text-sm">₹{parseFloat(order.frame_price || 0).toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Glass Cost</span>
-              <span className="text-[var(--text-primary)] text-sm">₹{parseFloat(order.glass_price || 0).toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Sub Total (Specs Cost)</span>
-              <span className="text-[var(--text-primary)] text-sm">₹{subTotal.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Discount</span>
-              <span className="text-red-400 text-sm">-₹{discount.toFixed(2)}</span>
-            </div>
-            
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-[var(--text-secondary)] text-sm">Advance Paid (Offline)</span>
-              <span className="text-green-400 text-sm">-₹{advance.toFixed(2)}</span>
-            </div>
-
-            {advanceOnline > 0 && (
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-[var(--text-secondary)] text-sm">Advance Paid (Online)</span>
-                <span className="text-green-400 text-sm">-₹{advanceOnline.toFixed(2)}</span>
-              </div>
             )}
-            
-            <div className="flex justify-between items-center mt-4 pt-4 border-t border-[var(--border-color)]">
-              <span className="text-[var(--text-primary)] font-bold uppercase tracking-widest text-sm">Final Total</span>
-              <span className="text-xl font-medium text-[var(--text-primary)]">₹{finalTotal.toFixed(2)}</span>
-            </div>
-
-            <div className="flex justify-between items-center mt-2 pt-2 border-t border-[var(--border-color)] border-dashed">
-              <span className="text-luxury-gold font-bold uppercase tracking-widest text-sm">Balance Due</span>
-              <span className="text-2xl font-light text-luxury-gold">₹{balance.toFixed(2)}</span>
-            </div>
           </div>
         </div>
       </div>

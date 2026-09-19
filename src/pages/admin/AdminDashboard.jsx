@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiOutlineBell, HiOutlineEye, HiX, HiTrendingUp, HiTrendingDown, HiOutlinePencil, HiOutlineTrash, HiOutlineDownload, HiOutlineUpload } from 'react-icons/hi';
+import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiOutlineBell, HiOutlineEye, HiX, HiTrendingUp, HiTrendingDown, HiOutlinePencil, HiOutlineTrash, HiOutlineDownload, HiOutlineUpload, HiOutlineClock } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import { db } from '../../services/db';
 import { exportDB, importInto } from 'dexie-export-import';
@@ -10,7 +10,7 @@ import OrderDetailsModal from '../../components/shared/OrderDetailsModal';
 import ConfirmModal from '../../components/shared/ConfirmModal';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, revenueOffline: 0, revenueOnline: 0, pendingReminders: 0, changes: { customers: '+0.00%', orders: '+0.00%', revenue: '+0.00%', pendingReminders: '+0.00%' } });
+  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, pendingOrders: 0, revenueOffline: 0, revenueOnline: 0, pendingReminders: 0, changes: { customers: '+0.00%', orders: '+0.00%', revenue: '+0.00%', pendingReminders: '+0.00%' } });
   const [recentOrders, setRecentOrders] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -96,10 +96,12 @@ const AdminDashboard = () => {
       const revenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0);
       const revenueOffline = todayOrders.reduce((sum, o) => sum + (parseFloat(o.advance) || 0), 0);
       const revenueOnline = todayOrders.reduce((sum, o) => sum + (parseFloat(o.advance_online) || 0), 0);
+      const pendingOrdersCount = todayOrders.filter(o => o.status === 'pending').length;
       
       const statsObj = {
         customers: customersCount,
         orders: todayOrders.length,
+        pendingOrders: pendingOrdersCount,
         revenue: revenue,
         revenueOffline: revenueOffline,
         revenueOnline: revenueOnline,
@@ -113,14 +115,14 @@ const AdminDashboard = () => {
       const mappedRecent = await Promise.all(recent.map(async (o) => {
         const u = allUsers.find(u => u.id === o.user_id);
         const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
-        const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+        const measurements = await db.measurements.where({ order_id: o.id }).toArray();
         return {
           ...o,
           customerName: o.customer_name || (u ? u.name : 'Unknown'),
           customerMobile: u ? u.mobile : '',
           amount: parseFloat(o.total_price) || 0,
           order_items: orderItems,
-          eye_prescriptions: prescriptions
+          measurements: measurements
         };
       }));
 
@@ -140,10 +142,10 @@ const AdminDashboard = () => {
       const orderId = Number(confirmModalData.idToDelete);
       if (isNaN(orderId)) throw new Error('Invalid Order ID');
       
-      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+      await db.transaction('rw', db.orders, db.order_items, db.measurements, db.reminders_log, async () => {
         await db.orders.delete(orderId);
         await db.order_items.where({ order_id: orderId }).delete();
-        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.measurements.where({ order_id: orderId }).delete();
         await db.reminders_log.where({ order_id: orderId }).delete();
       });
 
@@ -163,14 +165,15 @@ const AdminDashboard = () => {
   const statCards = [
     { name: "Today's Customers", value: stats.customers, icon: HiOutlineUsers, change: stats.changes?.customers || '+0.00%' },
     { name: "Today's Orders", value: stats.orders, icon: HiOutlineShoppingBag, change: stats.changes?.orders || '+0.00%' },
-    { name: "Today's Revenue", value: `₹${stats.revenue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`, icon: HiOutlineCurrencyRupee, change: stats.changes?.revenue || '+0.00%', offline: stats.revenueOffline || 0, online: stats.revenueOnline || 0 },
+    { name: "Today's Pending Orders", value: stats.pendingOrders || 0, icon: HiOutlineClock, change: '+0.00%' },
+    { name: "Today's Revenue", value: `₹${stats.revenue?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '0.00'}`, icon: HiOutlineCurrencyRupee, change: stats.changes?.revenue || '+0.00%' },
   ];
 
   return (
     <div>
       <h1 className="text-2xl font-light tracking-widest uppercase mb-8">Dashboard Overview</h1>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
         {statCards.map((stat, idx) => (
           <div key={idx} className="glassmorphism p-6 rounded-xl border border-[var(--border-color)] relative overflow-hidden group">
             <div className="flex justify-between items-start mb-4">
@@ -182,19 +185,6 @@ const AdminDashboard = () => {
                 <stat.icon className="w-6 h-6 text-luxury-gold" />
               </div>
             </div>
-            
-            {stat.offline !== undefined && stat.online !== undefined && (
-              <div className="flex justify-between items-center mt-3 mb-2">
-                <div className="text-base text-[var(--text-secondary)]">
-                  <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Offline: </span> 
-                  <span className="text-luxury-gold font-semibold text-lg">₹{stat.offline.toFixed(2)}</span>
-                </div>
-                <div className="text-base text-[var(--text-secondary)]">
-                  <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Online: </span> 
-                  <span className="text-luxury-gold font-semibold text-lg">₹{stat.online.toFixed(2)}</span>
-                </div>
-              </div>
-            )}
 
             <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--border-color)]">
               <span className="text-[10px] uppercase tracking-widest text-[var(--text-muted)]">Data for Today only</span>

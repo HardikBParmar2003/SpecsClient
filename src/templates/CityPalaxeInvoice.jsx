@@ -4,8 +4,8 @@ import { shopConfig } from '../config/shop';
 const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
   if (!order) return null;
 
-  const framePrice = parseFloat(order.frame_price || 0);
-  const glassPrice = parseFloat(order.glass_price || 0);
+  const framePrice = parseFloat(order.fabric_price || 0);
+  const glassPrice = parseFloat(order.stitching_price || 0);
   const discount = parseFloat(order.discount || 0);
   const advance = parseFloat(order.advance || 0);
   const advanceOnline = parseFloat(order.advance_online || 0);
@@ -20,11 +20,11 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
 
   if (order.order_items && order.order_items.length > 0) {
     const item = order.order_items[0];
-    if (item.custom_frame_name || item.product?.name || item.product_name) {
-      frameName = (item.custom_frame_name || item.product?.name || item.product_name).toUpperCase();
+    if (item.custom_item_name || item.product?.name || item.product_name) {
+      frameName = (item.custom_item_name || item.product?.name || item.product_name).toUpperCase();
     }
-    if (item.glass_type) {
-      glassName = item.glass_type.toUpperCase();
+    if (item.stitching_type) {
+      glassName = item.stitching_type.toUpperCase();
     }
   }
 
@@ -42,7 +42,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
 
         {/* Title */}
         <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#1e3a8a' }}>{shopConfig.shopName || 'Optic Palace'}</h1>
+          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#1e3a8a' }}>{shopConfig.shopName || 'Custom Fits Tailor'}</h1>
         </div>
         
         {/* Subtitle / Address Box */}
@@ -150,8 +150,8 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
         </div>
       </div>
 
-      {/* Prescription Table */}
-      {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+      {/* Measurement Table */}
+      {order.measurements && order.measurements.length > 0 && (
         <table style={{ width: '100%', borderCollapse: 'collapse', border: '1px solid #000', borderLeft: 'none', borderRight: 'none', borderBottom: 'none', textAlign: 'center' }}>
           <thead>
             <tr style={{ backgroundColor: '#1e3a8a', color: '#ffffff' }}>
@@ -165,17 +165,17 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
           <tbody>
             <tr>
               <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Right (OD)</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_sphere || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_cylinder || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_axis || '-'}</td>
-              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].od_add || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].od_sphere || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].od_cylinder || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].od_axis || '-'}</td>
+              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].od_add || '-'}</td>
             </tr>
             <tr>
               <td style={{ border: '1px solid #000', borderLeft: 'none', padding: '10px', fontWeight: 'bold', fontSize: '13px', textAlign: 'left', color: '#1e3a8a' }}>Left (OS)</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_sphere || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_cylinder || '-'}</td>
-              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_axis || '-'}</td>
-              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.eye_prescriptions[0].os_add || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].os_sphere || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].os_cylinder || '-'}</td>
+              <td style={{ border: '1px solid #000', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].os_axis || '-'}</td>
+              <td style={{ border: '1px solid #000', borderRight: 'none', padding: '10px 6px', fontSize: '13px' }}>{order.measurements[0].os_add || '-'}</td>
             </tr>
           </tbody>
         </table>
@@ -188,7 +188,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
           <div>Thanks. Visit Again.</div>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '30px', fontSize: '15px' }}>For, {shopConfig.shopName || 'City Optic Palace'}</div>
+          <div style={{ fontWeight: 'bold', marginBottom: '30px', fontSize: '15px' }}>For, {shopConfig.shopName || 'City Custom Fits Tailor'}</div>
         </div>
       </div>
       

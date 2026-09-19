@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiTrendingUp, HiTrendingDown } from 'react-icons/hi';
+import { HiOutlineUsers, HiOutlineShoppingBag, HiOutlineCurrencyRupee, HiTrendingUp, HiTrendingDown, HiOutlineClock } from 'react-icons/hi';
 import { db } from '../../services/db';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import CustomDatePicker from '../../components/shared/CustomDatePicker';
 
 const AdminRevenue = () => {
-  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, revenueOffline: 0, revenueOnline: 0, changes: { customers: '+0%', orders: '+0%', revenue: '+0%' } });
+  const [stats, setStats] = useState({ customers: 0, orders: 0, revenue: 0, pendingOrders: 0, revenueOffline: 0, revenueOnline: 0, changes: { customers: '+0%', orders: '+0%', revenue: '+0%', pendingOrders: '+0%' } });
   const [loading, setLoading] = useState(true);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -33,6 +33,7 @@ const AdminRevenue = () => {
         }
 
         const customersCount = allUsers.filter(u => !u.role || u.role === 'customer').length;
+        const pendingOrdersCount = allOrders.filter(o => o.status === 'pending').length;
         const revenue = allOrders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0);
         const revenueOffline = allOrders.reduce((sum, o) => sum + (parseFloat(o.advance) || 0), 0);
         const revenueOnline = allOrders.reduce((sum, o) => sum + (parseFloat(o.advance_online) || 0), 0);
@@ -40,10 +41,11 @@ const AdminRevenue = () => {
         setStats({
           customers: customersCount,
           orders: allOrders.length,
+          pendingOrders: pendingOrdersCount,
           revenue: revenue,
           revenueOffline: revenueOffline,
           revenueOnline: revenueOnline,
-          changes: { customers: '+0%', orders: '+0%', revenue: '+0%' }
+          changes: { customers: '+0%', orders: '+0%', revenue: '+0%', pendingOrders: '+0%' }
         });
       } catch (err) {
         console.error('Failed to fetch revenue stats', err);
@@ -58,7 +60,8 @@ const AdminRevenue = () => {
   const statCards = [
     { name: 'Total Customers', value: stats.customers, icon: HiOutlineUsers, change: stats.changes.customers },
     { name: 'Total Orders', value: stats.orders, icon: HiOutlineShoppingBag, change: stats.changes.orders },
-    { name: 'Revenue', value: `₹${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: HiOutlineCurrencyRupee, change: stats.changes.revenue, offline: stats.revenueOffline || 0, online: stats.revenueOnline || 0 },
+    { name: 'Total Pending Orders', value: stats.pendingOrders || 0, icon: HiOutlineClock, change: stats.changes.pendingOrders },
+    { name: 'Revenue', value: `₹${stats.revenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, icon: HiOutlineCurrencyRupee, change: stats.changes.revenue },
   ];
 
   return (
@@ -88,7 +91,7 @@ const AdminRevenue = () => {
       {loading ? (
         <div className="py-20"><LoadingSpinner /></div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
           {statCards.map((stat, idx) => (
             <div key={idx} className="glassmorphism p-6 rounded-xl border border-[var(--border-color)] relative overflow-hidden group">
               <div className="flex justify-between items-start mb-4">
@@ -100,19 +103,6 @@ const AdminRevenue = () => {
                   <stat.icon className="w-6 h-6 text-luxury-gold" />
                 </div>
               </div>
-
-              {stat.offline !== undefined && stat.online !== undefined && (
-                <div className="flex justify-between items-center mt-3 mb-2">
-                  <div className="text-base text-[var(--text-secondary)]">
-                    <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Offline: </span> 
-                    <span className="text-luxury-gold font-semibold text-lg">₹{stat.offline.toFixed(2)}</span>
-                  </div>
-                  <div className="text-base text-[var(--text-secondary)]">
-                    <span className="text-[var(--text-muted)] uppercase tracking-wider text-xs">Online: </span> 
-                    <span className="text-luxury-gold font-semibold text-lg">₹{stat.online.toFixed(2)}</span>
-                  </div>
-                </div>
-              )}
 
               <div className="flex items-center gap-2 mt-4 pt-4 border-t border-[var(--border-color)]">
                 <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-bold tracking-wider ${

@@ -4,8 +4,8 @@ import { shopConfig } from '../config/shop';
 const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
   if (!order) return null;
 
-  const framePrice = parseFloat(order.frame_price || 0);
-  const glassPrice = parseFloat(order.glass_price || 0);
+  const framePrice = parseFloat(order.fabric_price || 0);
+  const glassPrice = parseFloat(order.stitching_price || 0);
   const discount = parseFloat(order.discount || 0);
   const advance = parseFloat(order.advance || 0);
   const advanceOnline = parseFloat(order.advance_online || 0);
@@ -58,11 +58,11 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
         </div>
       </div>
 
-      {/* Prescription Table (if exists) */}
-      {order.eye_prescriptions && order.eye_prescriptions.length > 0 && (
+      {/* Measurement Table (if exists) */}
+      {order.measurements && order.measurements.length > 0 && (
         <div style={{ marginBottom: '30px' }}>
-          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Eye Prescription</h3>
-          {order.eye_prescriptions.map((p, idx) => (
+          <h3 style={{ fontSize: '16px', color: primaryColor, borderBottom: `2px solid ${borderColor}`, paddingBottom: '8px', marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '1px' }}>Eye Measurement</h3>
+          {order.measurements.map((p, idx) => (
             <table key={idx} style={{ width: '100%', textAlign: 'center', borderCollapse: 'collapse', borderRadius: '8px', overflow: 'hidden', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
               <thead style={{ backgroundColor: primaryColor, color: '#ffffff' }}>
                 <tr>
@@ -112,8 +112,8 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
               {order.order_items.map((item, idx) => (
                 <tr key={idx} style={{ borderBottom: `1px solid ${borderColor}` }}>
                   <td style={{ padding: '15px 12px' }}>
-                    <div style={{ fontWeight: 'bold', color: primaryColor, fontSize: '15px' }}>{item.custom_frame_name || item.product?.name || item.product_name || 'Eyewear Frame'}</div>
-                    {item.glass_type && <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Lens Type: {item.glass_type}</div>}
+                    <div style={{ fontWeight: 'bold', color: primaryColor, fontSize: '15px' }}>{item.custom_item_name || item.product?.name || item.product_name || 'Eyewear Frame'}</div>
+                    {item.stitching_type && <div style={{ color: '#666', fontSize: '12px', marginTop: '4px' }}>Lens Type: {item.stitching_type}</div>}
                   </td>
                   <td style={{ padding: '15px 12px', textAlign: 'right', fontWeight: 'bold' }}>₹{parseFloat(item.unit_price).toFixed(2)}</td>
                 </tr>
@@ -129,11 +129,11 @@ const ShivnetraChashamagharInvoice = React.forwardRef(({ order }, ref) => {
           <table style={{ width: '100%', textAlign: 'right', borderCollapse: 'collapse' }}>
             <tbody>
               <tr>
-                <td style={{ padding: '8px 0', color: '#666' }}>Frame Cost:</td>
+                <td style={{ padding: '8px 0', color: '#666' }}>Fabric Cost:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{framePrice.toFixed(2)}</td>
               </tr>
               <tr>
-                <td style={{ padding: '8px 0', color: '#666' }}>Glass Cost:</td>
+                <td style={{ padding: '8px 0', color: '#666' }}>Stitching Cost:</td>
                 <td style={{ padding: '8px 0', fontWeight: 'bold' }}>₹{glassPrice.toFixed(2)}</td>
               </tr>
               <tr>

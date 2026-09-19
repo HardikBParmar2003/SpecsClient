@@ -4,8 +4,12 @@ import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import { AuthContext } from '../context/AuthContext';
 import { shopConfig } from '../config/shop.js';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../services/db';
 
 const LoginPage = () => {
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
   const [emailOrMobile, setEmailOrMobile] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -96,7 +100,7 @@ const LoginPage = () => {
         </form>
         <div className="mt-6 text-center">
           <p className="text-sm text-[var(--text-secondary)]">
-            New to {shopConfig.shortName}?{' '}
+            New to {(customShopConfig.shopName || customShopConfig.shortName)}?{' '}
             <Link to="/register" className="font-medium text-luxury-gold hover:text-[var(--text-primary)] transition-colors">
               Create an account
             </Link>

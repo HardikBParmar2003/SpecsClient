@@ -8,11 +8,7 @@ import { ThemeProvider } from './context/ThemeContext.jsx';
 import './index.css';
 import App from './App.jsx';
 
-import { shopConfig } from './config/shop.js';
-
 import { initializeDatabase } from './services/db.js';
-
-document.getElementById('app-title').innerText = shopConfig.shopName;
 
 initializeDatabase().then(() => {
   createRoot(document.getElementById('root')).render(

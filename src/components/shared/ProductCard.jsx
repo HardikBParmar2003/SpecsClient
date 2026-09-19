@@ -120,7 +120,7 @@ const ProductCard = ({ product }) => {
               {product.name}
             </h3>
           </Link>
-          <p className="mt-1 text-sm text-[var(--text-muted)]">{product.frame_type} • {product.shape}</p>
+          <p className="mt-1 text-sm text-[var(--text-muted)]">{product.fabric_type} • {product.shape}</p>
         </div>
         
         <div className="mt-auto pt-4 flex items-center justify-between border-t border-[var(--text-primary)]/10">

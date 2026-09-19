@@ -15,7 +15,7 @@ const AdminProducts = () => {
   const [confirmModalData, setConfirmModalData] = useState({ isOpen: false, idToDelete: null });
   
   const [formData, setFormData] = useState({
-    name: '', brand: '', price: '', stock_quantity: '', frame_type: 'Full Rim', material: 'Plastic', shape: 'Square', gender: 'Unisex', default_reminder_months: 12,
+    name: '', brand: '', price: '', stock_quantity: '', fabric_type: 'Full Rim', material: 'Plastic', shape: 'Square', gender: 'Unisex', default_reminder_months: 12,
     image_gallery: [{ color: 'Default', images: [''] }]
   });
 
@@ -51,7 +51,7 @@ const AdminProducts = () => {
   const openAddModal = () => {
     setEditingId(null);
     setFormData({
-      name: '', brand: '', price: '', stock_quantity: '', frame_type: 'Full Rim', material: 'Plastic', shape: 'Square', gender: 'Unisex', default_reminder_months: 12,
+      name: '', brand: '', price: '', stock_quantity: '', fabric_type: 'Full Rim', material: 'Plastic', shape: 'Square', gender: 'Unisex', default_reminder_months: 12,
       image_gallery: [{ color: '', images: [''] }]
     });
     setIsModalOpen(true);
@@ -71,7 +71,7 @@ const AdminProducts = () => {
       brand: product.brand,
       price: product.price,
       stock_quantity: product.stock_quantity,
-      frame_type: product.frame_type,
+      fabric_type: product.fabric_type,
       material: product.material,
       shape: product.shape,
       gender: product.gender,
@@ -274,7 +274,7 @@ const AdminProducts = () => {
             </div>
             <form onSubmit={handleSubmit} className="p-6 grid grid-cols-2 gap-6">
               <div className="col-span-2 sm:col-span-1">
-                <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Frame Name <span className="text-red-500">*</span></label>
+                <label className="block text-xs uppercase tracking-wider text-[var(--text-muted)] mb-2">Item Name <span className="text-red-500">*</span></label>
                 <input required type="text" value={formData.name} onChange={e=>setFormData({...formData, name:e.target.value})} className="w-full bg-[var(--input-bg)] border border-[var(--input-border)] rounded px-4 py-2 text-[var(--input-text)] focus:outline-none focus:border-luxury-gold" />
               </div>
               <div className="col-span-2 sm:col-span-1">

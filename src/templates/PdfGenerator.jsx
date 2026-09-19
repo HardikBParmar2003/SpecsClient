@@ -7,11 +7,13 @@ import { Capacitor } from '@capacitor/core';
 import { SHOP_CONFIG } from '../config/shopConfig';
 import ShivnetraChashamagharInvoice from './ShivnetraChashamagharInvoice';
 import CityPalaxeInvoice from './CityPalaxeInvoice';
+import TailorInvoice from './TailorInvoice';
 
 // Map of all available templates
 const TEMPLATES = {
   ShivnetraChashamaghar: ShivnetraChashamagharInvoice,
   CityPalaxe: CityPalaxeInvoice,
+  TailorInvoice: TailorInvoice,
   // add more templates here in the future
 };
 

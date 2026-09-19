@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { HiOutlineEye, HiX, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineEye, HiX, HiOutlinePencil, HiOutlineTrash, HiOutlineDocumentText, HiOutlineShoppingBag, HiOutlineCreditCard, HiOutlineUser } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import { db } from '../../services/db';
 import CustomDatePicker from '../../components/shared/CustomDatePicker';
@@ -41,7 +41,7 @@ const AdminOrders = () => {
       const mappedOrders = await Promise.all(paginatedOrders.map(async (o) => {
         const user = await db.users.get(o.user_id);
         const orderItems = await db.order_items.where({ order_id: o.id }).toArray();
-        const prescriptions = await db.eye_prescriptions.where({ order_id: o.id }).toArray();
+        const measurements = await db.measurements.where({ order_id: o.id }).toArray();
         
         return {
           id: o.id.toString(),
@@ -57,11 +57,16 @@ const AdminOrders = () => {
           pay_status: o.pay_status,
           created_at: o.created_at,
           discount: o.discount,
-          frame_price: o.frame_price,
-          glass_price: o.glass_price,
+          fabric_price: o.fabric_price,
+          stitching_price: o.stitching_price,
           bill_number: o.bill_number,
+          shirt_qty: o.shirt_qty,
+          pant_qty: o.pant_qty,
+          photo: o.photo,
+          order_date: o.order_date,
+          delivery_date: o.delivery_date,
           order_items: orderItems,
-          eye_prescriptions: prescriptions
+          measurements: measurements
         };
       }));
       setOrders(mappedOrders);
@@ -90,10 +95,10 @@ const AdminOrders = () => {
       const orderId = Number(confirmModalData.idToDelete);
       if (isNaN(orderId)) throw new Error('Invalid Order ID');
       
-      await db.transaction('rw', db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+      await db.transaction('rw', db.orders, db.order_items, db.measurements, db.reminders_log, async () => {
         await db.orders.delete(orderId);
         await db.order_items.where({ order_id: orderId }).delete();
-        await db.eye_prescriptions.where({ order_id: orderId }).delete();
+        await db.measurements.where({ order_id: orderId }).delete();
         await db.reminders_log.where({ order_id: orderId }).delete();
       });
       toast.success('Order deleted successfully');
@@ -138,80 +143,95 @@ const AdminOrders = () => {
               Loading orders...
             </div>
           ) : (
-            <table className="w-full text-left text-sm text-[var(--text-secondary)]">
-              <thead className="text-xs text-[var(--text-faint)] uppercase bg-[var(--bg-card)]">
-                <tr>
-                  <th className="px-6 py-4 font-medium tracking-wider">Order No.</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Date</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Customer</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Amount</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Order Status</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Payment</th>
-                  <th className="px-6 py-4 font-medium tracking-wider text-center">Action</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-color)]">
-                {orders.map((order, index) => (
-                  <tr key={order.id} onClick={() => setSelectedOrder(order)} className="hover:bg-[var(--border-color)] transition-colors cursor-pointer group">
-                    <td className="px-6 py-4">#{(page - 1) * limit + index + 1}</td>
-                    <td className="px-6 py-4 whitespace-nowrap">{new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' })}</td>
-                    <td className="px-6 py-4 min-w-[120px]">{order.customerName}</td>
-                    <td className="px-6 py-4 text-luxury-gold font-medium">₹{order.amount}</td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-[10px] uppercase w-fit ${
-                        order.status === 'completed' ? 'bg-green-500/10 text-green-400' : 
-                        order.status === 'pending' ? 'bg-red-500/10 text-red-400' : 
-                        order.status === 'processing' ? 'bg-yellow-500/10 text-yellow-400' : 
-                        order.status === 'cancelled' ? 'bg-gray-500/10 text-gray-400' : 
-                        'bg-blue-500/10 text-blue-400'
-                      }`}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4">
-                      <span className={`px-2 py-1 rounded text-[10px] uppercase w-fit ${
-                        order.pay_status === 'completed' ? 'bg-green-500/10 text-green-400' : 
-                        order.pay_status === 'pending' ? 'bg-red-500/10 text-red-400' : 
-                        order.pay_status === 'partially' ? 'bg-yellow-500/10 text-yellow-400' : 
-                        'bg-gray-500/10 text-gray-400'
-                      }`}>
-                        {order.pay_status}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); }} 
-                          className="p-2 text-[var(--text-muted)] hover:text-luxury-gold transition-colors cursor-pointer"
-                          title="View Details"
-                        >
-                          <HiOutlineEye className="w-5 h-5 mx-auto" />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedOrder(order); setIsEditing(true); }} 
-                          className="p-2 text-[var(--text-muted)] hover:text-luxury-gold transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 cursor-pointer"
-                          title="Edit Order"
-                        >
-                          <HiOutlinePencil className="w-5 h-5 mx-auto" />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); confirmDelete(order.id); }} 
-                          className="p-2 text-[var(--text-muted)] hover:text-red-400 transition-colors md:opacity-0 md:group-hover:opacity-100 focus:opacity-100 cursor-pointer"
-                          title="Delete Order"
-                        >
-                          <HiOutlineTrash className="w-5 h-5 mx-auto" />
-                        </button>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[var(--bg-primary)]/50 rounded-b-xl border-t border-[var(--border-color)]/30">
+            {orders.map((order) => (
+              <div 
+                key={order.id} 
+                onClick={() => setSelectedOrder(order)} 
+                className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-xl p-3 sm:p-4 hover:border-luxury-gold/50 transition-all duration-300 cursor-pointer group shadow-[var(--shadow-card)] hover:shadow-md flex items-center gap-3 sm:gap-4 relative"
+              >
+                {/* Left Column: Chip & Avatar */}
+                <div className="flex flex-col items-center gap-1.5 flex-shrink-0">
+                  <span className="font-mono text-luxury-gold font-bold bg-luxury-gold/10 px-2 py-0.5 rounded border border-luxury-gold/20 text-[10px] shadow-sm">
+                    #{order.bill_number || order.id}
+                  </span>
+                  {/* Avatar */}
+                  <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-luxury-gold/20 to-luxury-gold/5 flex items-center justify-center text-luxury-gold font-medium text-lg border border-luxury-gold/30 shadow-inner overflow-hidden">
+                    {order.photo ? (
+                      <img src={order.photo} alt={order.customerName} className="w-full h-full object-cover" />
+                    ) : (
+                      order.customerName.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                </div>
+
+                {/* Main Content & Right Column Wrapper */}
+                <div className="flex-1 min-w-0 flex justify-between gap-2">
+                  
+                  {/* Left Side: Info & Badges */}
+                  <div className="flex flex-col justify-center gap-1.5 min-w-0">
+
+                    <h3 className="text-[var(--text-primary)] font-semibold truncate text-[15px] sm:text-base leading-none group-hover:text-luxury-gold transition-colors">
+                      {order.customerName}
+                    </h3>
+                    {(order.shirt_qty > 0 || order.pant_qty > 0) && (
+                      <div className="flex items-center gap-2 text-xs text-[var(--text-secondary)] truncate">
+                         <span className="flex items-center gap-1.5">
+                           {order.shirt_qty > 0 && <span>👔 {order.shirt_qty}</span>}
+                           {order.pant_qty > 0 && <span>👖 {order.pant_qty}</span>}
+                         </span>
                       </div>
-                    </td>
-                  </tr>
-                ))}
-                {orders.length === 0 && (
-                  <tr>
-                    <td colSpan="8" className="px-6 py-12 text-center text-[var(--text-muted)]">No orders found for the selected criteria.</td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                    )}
+                    <div className="flex gap-1.5 mt-0.5">
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] uppercase font-bold tracking-wider ${
+                        order.status === 'completed' ? 'bg-green-500/10 text-green-500' : 
+                        order.status === 'pending' ? 'bg-red-500/10 text-red-500' : 
+                        order.status === 'processing' ? 'bg-yellow-500/10 text-yellow-500' : 
+                        'bg-gray-500/10 text-gray-500'
+                      }`}>
+                        Ord: {order.status}
+                      </span>
+                      <span className={`px-1.5 py-0.5 rounded text-[8px] sm:text-[9px] uppercase font-bold tracking-wider ${
+                        order.pay_status === 'completed' ? 'bg-green-500/10 text-green-500' : 
+                        order.pay_status === 'pending' ? 'bg-red-500/10 text-red-500' : 
+                        order.pay_status === 'partially' ? 'bg-yellow-500/10 text-yellow-500' : 
+                        'bg-gray-500/10 text-gray-500'
+                      }`}>
+                        Pay: {order.pay_status}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Right Side: Date, Amounts, Actions */}
+                  <div className="flex flex-col items-end justify-between flex-shrink-0">
+                    <div className="text-[10px] sm:text-[11px] text-luxury-gold/80 font-medium whitespace-nowrap">
+                      {order.delivery_date 
+                        ? new Date(order.delivery_date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : new Date(order.order_date || order.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                    </div>
+                    <div className="flex flex-col items-end justify-center flex-1 my-1">
+                      <span className="text-sm font-bold text-[var(--text-primary)] leading-tight">₹{order.amount}</span>
+                      {Math.max(0, order.amount - ((order.advance || 0) + (order.advance_online || 0))) > 0 && (
+                        <span className="text-[10px] sm:text-[11px] text-red-400 font-medium leading-tight mt-0.5">
+                          Due: ₹{Math.max(0, order.amount - ((order.advance || 0) + (order.advance_online || 0))).toFixed(0)}
+                        </span>
+                      )}
+                    </div>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); confirmDelete(order.id); }} 
+                      className="text-[var(--text-muted)] hover:text-red-400 transition-colors p-1 rounded-md hover:bg-red-500/10"
+                      title="Delete Order"
+                    >
+                      <HiOutlineTrash className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+            {orders.length === 0 && (
+              <div className="p-12 text-center text-[var(--text-muted)] sm:col-span-2 lg:col-span-3">No orders found for the selected criteria.</div>
+            )}
+          </div>
           )}
         </div>
 

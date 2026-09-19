@@ -1,6 +1,9 @@
 import { useEffect } from 'react';
 import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { App as CapApp } from '@capacitor/app';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from './services/db';
+import { shopConfig } from './config/shop.js';
 import Layout from './components/layout/Layout';
 import AdminLayout from './components/layout/AdminLayout';
 import ProtectedRoute from './components/shared/ProtectedRoute';
@@ -17,18 +20,24 @@ import ProfilePage from './pages/ProfilePage';
 // Admin Pages
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminPOS from './pages/admin/AdminPOS';
-import AdminParties from './pages/admin/AdminParties';
-import AdminPartyPurchases from './pages/admin/AdminPartyPurchases';
 import AdminCustomers from './pages/admin/AdminCustomers';
 import AdminCustomerOrders from './pages/admin/AdminCustomerOrders';
 import AdminOrders from './pages/admin/AdminOrders';
 import AdminReminders from './pages/admin/AdminReminders';
 import AdminRevenue from './pages/admin/AdminRevenue';
 import AdminExpenses from './pages/admin/AdminExpenses';
+import AdminSettings from './pages/admin/AdminSettings';
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
+
+  useEffect(() => {
+    document.title = customShopConfig.shopName;
+  }, [customShopConfig.shopName]);
 
   useEffect(() => {
     const handleBackButton = CapApp.addListener('backButton', ({ canGoBack }) => {
@@ -79,16 +88,6 @@ function App() {
           <AdminLayout><AdminPOS /></AdminLayout>
         </ProtectedRoute>
       } />
-      <Route path="/admin/parties" element={
-        <ProtectedRoute requireAdmin={true}>
-          <AdminLayout><AdminParties /></AdminLayout>
-        </ProtectedRoute>
-      } />
-      <Route path="/admin/parties/:id/purchases" element={
-        <ProtectedRoute requireAdmin={true}>
-          <AdminLayout><AdminPartyPurchases /></AdminLayout>
-        </ProtectedRoute>
-      } />
       <Route path="/admin/orders" element={
         <ProtectedRoute requireAdmin={true}>
           <AdminLayout><AdminOrders /></AdminLayout>
@@ -117,6 +116,11 @@ function App() {
       <Route path="/admin/expenses" element={
         <ProtectedRoute requireAdmin={true}>
           <AdminLayout><AdminExpenses /></AdminLayout>
+        </ProtectedRoute>
+      } />
+      <Route path="/admin/settings" element={
+        <ProtectedRoute requireAdmin={true}>
+          <AdminLayout><AdminSettings /></AdminLayout>
         </ProtectedRoute>
       } />
     </Routes>

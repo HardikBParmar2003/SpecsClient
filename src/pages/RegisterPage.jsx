@@ -4,7 +4,11 @@ import { HiOutlineEye, HiOutlineEyeOff } from 'react-icons/hi';
 import { toast } from 'react-hot-toast';
 import { db } from '../services/db';
 import { shopConfig } from '../config/shop.js';
+import { useLiveQuery } from 'dexie-react-hooks';
+
 const RegisterPage = () => {
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -49,7 +53,7 @@ const RegisterPage = () => {
         <div>
           <h2 className="mt-2 text-center text-3xl font-light tracking-widest text-[var(--text-primary)] uppercase">Register</h2>
           <p className="mt-2 text-center text-sm text-[var(--text-secondary)]">
-            Join the {shopConfig.shortName} exclusive club
+            Join the {(customShopConfig.shopName || customShopConfig.shortName)} exclusive club
           </p>
         </div>
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>

@@ -15,7 +15,7 @@ const ProductsPage = () => {
   // Filters state
   const [filters, setFilters] = useState({
     brand: '',
-    frame_type: '',
+    fabric_type: '',
     gender: ''
   });
 
@@ -38,7 +38,7 @@ const ProductsPage = () => {
   const filteredProducts = products.filter(product => {
     const matchSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) || product.brand.toLowerCase().includes(searchTerm.toLowerCase());
     const matchBrand = filters.brand === '' || product.brand === filters.brand;
-    const matchType = filters.frame_type === '' || product.frame_type === filters.frame_type;
+    const matchType = filters.fabric_type === '' || product.fabric_type === filters.fabric_type;
     const matchGender = filters.gender === '' || product.gender === filters.gender;
     return matchSearch && matchBrand && matchType && matchGender;
   }).sort((a, b) => {
@@ -110,10 +110,10 @@ const ProductsPage = () => {
             </div>
 
             <div>
-              <h3 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)] mb-4">Frame Type</h3>
+              <h3 className="text-sm font-medium tracking-widest uppercase text-[var(--text-secondary)] mb-4">Fabric Type</h3>
               <CustomSelect 
-                name="frame_type" 
-                value={filters.frame_type} 
+                name="fabric_type" 
+                value={filters.fabric_type} 
                 onChange={handleFilterChange} 
                 options={[
                   {value: "", label: "All Types"},

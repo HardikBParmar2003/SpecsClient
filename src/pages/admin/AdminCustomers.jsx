@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-hot-toast';
-import { HiOutlineSearch, HiOutlinePencil, HiOutlineTrash, HiOutlineX } from 'react-icons/hi';
+import { HiOutlineSearch, HiOutlinePencil, HiOutlineTrash, HiOutlineX, HiOutlinePhone, HiOutlineMail, HiOutlineShoppingBag, HiOutlineCalendar, HiOutlineCurrencyRupee } from 'react-icons/hi';
 import { db } from '../../services/db';
 import LoadingSpinner from '../../components/shared/LoadingSpinner';
 import CustomPagination from '../../components/shared/CustomPagination';
@@ -57,10 +57,15 @@ const AdminCustomers = () => {
       const customersWithStats = await Promise.all(allCustomers.map(async (c) => {
         const orders = await db.orders.filter(o => Number(o.user_id) === Number(c.id)).toArray();
         const total_spent = orders.reduce((sum, o) => sum + (parseFloat(o.total_price) || 0), 0);
+        
+        const sortedOrders = orders.sort((a,b) => new Date(a.created_at) - new Date(b.created_at));
+        const firstOrderPhoto = sortedOrders.find(o => o.photo)?.photo || null;
+
         return {
           ...c,
           orders_count: orders.length,
-          total_spent
+          total_spent,
+          photo: firstOrderPhoto
         };
       }));
 
@@ -99,11 +104,11 @@ const AdminCustomers = () => {
       const userOrders = await db.orders.where({ user_id: customerId }).toArray();
       const orderIds = userOrders.map(o => o.id);
 
-      await db.transaction('rw', db.users, db.orders, db.order_items, db.eye_prescriptions, db.reminders_log, async () => {
+      await db.transaction('rw', db.users, db.orders, db.order_items, db.measurements, db.reminders_log, async () => {
         // Delete all associated items for these orders
         for (const oId of orderIds) {
           await db.order_items.where({ order_id: oId }).delete();
-          await db.eye_prescriptions.where({ order_id: oId }).delete();
+          await db.measurements.where({ order_id: oId }).delete();
           await db.reminders_log.where({ order_id: oId }).delete();
         }
         // Delete the orders
@@ -167,55 +172,68 @@ const AdminCustomers = () => {
         {customers.length === 0 ? (
           <div className="p-8 text-center text-[var(--text-muted)]">No customers found.</div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-[var(--text-secondary)]">
-              <thead className="text-xs text-[var(--text-faint)] uppercase bg-[var(--input-bg)]">
-                <tr>
-                  <th className="px-6 py-4 font-medium tracking-wider">Name</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Contact</th>
-                  <th className="px-6 py-4 font-medium tracking-wider">Total Spent</th>
-                  <th className="px-6 py-4 font-medium tracking-wider text-center">Orders</th>
-                  <th className="px-6 py-4 font-medium tracking-wider text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--border-color)]">
-                {customers.map((c) => (
-                  <tr key={c.id} className="hover:bg-[var(--bg-card-hover)] transition-colors group">
-                    <td className="px-6 py-4 font-medium text-[var(--text-primary)]">{c.name}</td>
-                    <td className="px-6 py-4">
-                      {c.mobile}<br/>
-                      <span className="text-xs text-[var(--text-muted)]">{c.email || 'No email'}</span>
-                    </td>
-                    <td className="px-6 py-4 text-luxury-gold font-medium">₹{c.total_spent.toFixed(2)}</td>
-                    <td className="px-6 py-4 text-center">{c.orders_count}</td>
-                    <td className="px-6 py-4 text-center">
-                      <div className="flex justify-center items-center gap-2">
-                        <button 
-                          onClick={() => navigate(`/admin/customers/${c.id}/orders`, { state: { customer: c } })}
-                          className="text-[var(--text-secondary)] hover:text-[var(--bg-primary)] hover:bg-luxury-gold px-3 py-1.5 border border-[var(--border-color)] hover:border-luxury-gold rounded transition-colors text-[10px] font-medium uppercase tracking-wider cursor-pointer mr-2"
-                        >
-                          Orders
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedCustomer(c); setIsEditModalOpen(true); }} 
-                          className="p-1.5 text-[var(--text-secondary)] hover:text-luxury-gold transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
-                          title="Edit Customer"
-                        >
-                          <HiOutlinePencil className="w-4 h-4 mx-auto" />
-                        </button>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setConfirmModalData({ isOpen: true, idToDelete: c.id }); }} 
-                          className="p-1.5 text-[var(--text-secondary)] hover:text-red-400 transition-colors cursor-pointer rounded-full bg-[var(--input-bg)] md:opacity-0 md:group-hover:opacity-100 focus:opacity-100"
-                          title="Delete Customer"
-                        >
-                          <HiOutlineTrash className="w-4 h-4 mx-auto" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-[var(--bg-primary)]/50 rounded-b-xl border-t border-[var(--border-color)]/30">
+            {customers.map((c) => (
+              <div 
+                key={c.id} 
+                onClick={() => navigate(`/admin/customers/${c.id}/orders`, { state: { customer: c } })}
+                className="bg-[var(--bg-card)] border border-[var(--border-color)] rounded-2xl p-4 hover:border-luxury-gold/50 transition-all duration-300 cursor-pointer group shadow-[var(--shadow-card)] hover:shadow-lg relative flex flex-col gap-4"
+              >
+                {/* Header: Avatar, Name, Mobile */}
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-luxury-gold/20 to-luxury-gold/5 flex-shrink-0 flex items-center justify-center text-luxury-gold font-medium text-xl border border-luxury-gold/30 shadow-inner overflow-hidden">
+                    {c.photo ? (
+                      <img src={c.photo} alt={c.name} className="w-full h-full object-cover" />
+                    ) : (
+                      c.name.charAt(0).toUpperCase()
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-[var(--text-primary)] font-semibold truncate text-base group-hover:text-luxury-gold transition-colors">{c.name}</h3>
+                    <div className="flex items-center gap-1.5 text-sm text-[var(--text-muted)] mt-1">
+                      <HiOutlinePhone className="w-3.5 h-3.5 text-luxury-gold/70" />
+                      <span className="truncate">{c.mobile}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Footer: Stats & Actions */}
+                <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]/50">
+                  <div className="flex items-center gap-4">
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Spent</span>
+                      <span className="text-sm font-bold text-luxury-gold">₹{c.total_spent.toFixed(0)}</span>
+                    </div>
+                    <div className="w-px h-6 bg-[var(--border-color)]/50"></div>
+                    <div className="flex flex-col">
+                      <span className="text-[10px] uppercase tracking-wider text-[var(--text-muted)]">Orders</span>
+                      <span className="text-sm font-semibold text-[var(--text-primary)]">{c.orders_count}</span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-1">
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation(); 
+                        setSelectedCustomer(c);
+                        setIsEditModalOpen(true); 
+                      }} 
+                      className="p-2 text-[var(--text-secondary)] hover:text-luxury-gold hover:bg-luxury-gold/10 transition-all duration-300 rounded-lg"
+                      title="Edit"
+                    >
+                      <HiOutlinePencil className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                    <button 
+                      onClick={(e) => { e.stopPropagation(); setConfirmModalData({ isOpen: true, idToDelete: c.id }); }} 
+                      className="p-2 text-[var(--text-secondary)] hover:text-red-400 hover:bg-red-500/10 transition-all duration-300 rounded-lg"
+                      title="Delete"
+                    >
+                      <HiOutlineTrash className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -273,7 +291,7 @@ const AdminCustomers = () => {
         onClose={() => setConfirmModalData({ isOpen: false, idToDelete: null })}
         onConfirm={handleDeleteCustomer}
         title="Delete Customer"
-        message="Are you sure you want to permanently delete this customer? This action will also securely delete ALL their orders, prescriptions, and order history. This cannot be undone."
+        message="Are you sure you want to permanently delete this customer? This action will also securely delete ALL their orders, measurements, and order history. This cannot be undone."
       />
     </div>
   );

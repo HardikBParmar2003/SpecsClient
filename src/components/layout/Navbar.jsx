@@ -5,12 +5,17 @@ import { AuthContext } from '../../context/AuthContext';
 import { ThemeContext } from '../../context/ThemeContext';
 import ProfileModal from '../shared/ProfileModal';
 import { shopConfig } from '../../config/shop.js';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from '../../services/db';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, logout } = useContext(AuthContext);
   const { theme, toggleTheme } = useContext(ThemeContext);
+
+  const dbSettings = useLiveQuery(() => db.settings.where({ key: 'shopSettings' }).first());
+  const customShopConfig = dbSettings?.value ? { ...shopConfig, ...dbSettings.value } : shopConfig;
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
@@ -22,22 +27,8 @@ const Navbar = () => {
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0">
               <div className="flex flex-col items-start text-gradient">
-                {/* Top Left */}
-                {/* <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.3em] font-medium mb-[-2px] ml-1">
-                  SHREE
-                </span> */}
-                
-                {/* Big Middle */}
-                <span className="text-2xl font-bold uppercase tracking-wide leading-none my-1">
-                  {/* SHIVNETRA */}
-                  OPTIC PALACE
-                  {/* SUPER OPTICS */}
-                </span>
-                
-                {/* Bottom Right */}
-                <span className="text-[0.65rem] sm:text-xs uppercase tracking-[0.25em] font-medium mt-[-2px] mr-1 self-end">
-                  {/* CHASHMAGHAR */}
-                  CONTACT LENS CLINIC
+                <span className="text-xl sm:text-2xl font-bold uppercase tracking-wide leading-none my-1">
+                  {customShopConfig.shopName}
                 </span>
               </div>            
                 </Link>

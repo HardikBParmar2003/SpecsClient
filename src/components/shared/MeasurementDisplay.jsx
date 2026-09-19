@@ -6,7 +6,7 @@ import { Filesystem, Directory } from '@capacitor/filesystem';
 import { Share } from '@capacitor/share';
 import { shopConfig } from '../../config/shop.js';
 
-const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
+const MeasurementDisplay = ({ isOpen, onClose, productImg }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const glassesRef = useRef(null);
@@ -306,4 +306,4 @@ const VirtualTryOn = ({ isOpen, onClose, productImg }) => {
   );
 };
 
-export default VirtualTryOn;
+export default MeasurementDisplay;
