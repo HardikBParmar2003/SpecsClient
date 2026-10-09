@@ -24,19 +24,19 @@
 //   reminderShopName:"શ્રી રાધેશ્યામ ચશ્માઘર",
 // };
 
-export const shopConfig = {
-  shopName: "Optic Palace",
-  shortName: "Optic Palace",
-  email: "support@opticpalace.com",
-  address: "2.city Comp. Ghanchiwad, High Court Road Bhavnagar",
-  aboutText: "At Optic Palace, we believe that the right pair of glasses isn't just an accessory - it's an expression of your personality.",
-  heroImage: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEJXuYZElxCxX3llHYovbVJbzoriWPvjI2TuIKXdeJW2HhjA7ocdo9PkWFuQBuwnXqUkMsRqgaJbykkvtP0NrR8VxGpYEyy5U0Qj8ds-LVqBhKnixRkLsXGMBQMaVvh6AVT6tdjVdyuyUu8=s1360-w1360-h1020-rw",
-  downloadPrefix: "opticpalace",
-  themeKey: "opticpalace-theme",
-  phone_1: "+91 98257 07708",
-  phone_2: "+91 97272 88438",
-  reminderShopName:"Optic Palace",
-};
+// export const shopConfig = {
+//   shopName: "Optic Palace",
+//   shortName: "Optic Palace",
+//   email: "support@opticpalace.com",
+//   address: "2.city Comp. Ghanchiwad, High Court Road Bhavnagar",
+//   aboutText: "At Optic Palace, we believe that the right pair of glasses isn't just an accessory - it's an expression of your personality.",
+//   heroImage: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEJXuYZElxCxX3llHYovbVJbzoriWPvjI2TuIKXdeJW2HhjA7ocdo9PkWFuQBuwnXqUkMsRqgaJbykkvtP0NrR8VxGpYEyy5U0Qj8ds-LVqBhKnixRkLsXGMBQMaVvh6AVT6tdjVdyuyUu8=s1360-w1360-h1020-rw",
+//   downloadPrefix: "opticpalace",
+//   themeKey: "opticpalace-theme",
+//   phone_1: "+91 98257 07708",
+//   phone_2: "+91 97272 88438",
+//   reminderShopName:"Optic Palace",
+// };
 
 // export const shopConfig = {
 //   shopName: "Super Optics",
@@ -51,3 +51,20 @@ export const shopConfig = {
 //   phone_2: "+91 97272 88438",
 //   reminderShopName:"Super Optics",
 // };
+
+
+export const shopConfig = {
+  shopName: "City Optical",
+  shortName: "City Optical",
+  email: "support@cityoptical.com",
+  address: "Mota Bazaar Road, Jumma Masjid, Near Delhi Darbar Hotel, Navsari, Gujarat",
+  aboutText: "At City Optical, we believe that the right pair of glasses isn't just an accessory - it's an expression of your personality.",
+  heroImage: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEJXuYZElxCxX3llHYovbVJbzoriWPvjI2TuIKXdeJW2HhjA7ocdo9PkWFuQBuwnXqUkMsRqgaJbykkvtP0NrR8VxGpYEyy5U0Qj8ds-LVqBhKnixRkLsXGMBQMaVvh6AVT6tdjVdyuyUu8=s1360-w1360-h1020-rw",
+  downloadPrefix: "cityoptical",
+  themeKey: "cityoptical-theme",
+  phone_1: "+91 94261 30931",
+  phone_2: "+91 73591 30931",
+  reminderShopName:"City Optical",
+  name_1: "Faruk",
+  name_2: "Aamir",
+};

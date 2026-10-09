@@ -1,5 +1,6 @@
 import React from 'react';
 import { shopConfig } from '../config/shop';
+import logoImg from '../assets/city_palace_logo_cropped.jpeg';
 
 const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
   if (!order) return null;
@@ -31,22 +32,25 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
   const dateStr = new Date(order.created_at).toLocaleDateString('en-GB');
 
   return (
-    <div ref={ref} style={{ width: '800px', padding: '32px', fontFamily: 'Arial, sans-serif', margin: '0 auto', fontSize: '13px', backgroundColor: '#ffffff', color: '#000', boxSizing: 'border-box' }}>
+    <div ref={ref} style={{ width: '800px', padding: '32px', fontFamily: 'Arial, sans-serif', margin: '0 auto', fontSize: '17px', backgroundColor: '#ffffff', color: '#000', boxSizing: 'border-box' }}>
       
       <div style={{ border: '2px solid #1e3a8a' }}>
         {/* Header Info */}
-        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 10px', backgroundColor: '#f0f4f8', color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' }}>
-          <div style={{ fontWeight: 'bold' }}>Irshad : {shopConfig.phone_1 || '9825707708'}</div>
-          <div style={{ fontWeight: 'bold' }}>Jabir : {shopConfig.phone_2 || '9727288438'}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '15px 15px 10px', backgroundColor: '#ffffff', color: '#1e3a8a', borderBottom: '1px solid #e2e8f0' }}>
+          <div style={{ fontWeight: 'bold', flex: 1, whiteSpace: 'nowrap' }}>{shopConfig.name_1 || ''} : {shopConfig.phone_1 || ''}</div>
+          <div style={{ flex: 2, display: 'flex', justifyContent: 'center' }}>
+            <img src={logoImg} alt="City Palace Logo" style={{ width: '250px', height: 'auto', maxHeight: '90px', objectFit: 'contain' }} />
+          </div>
+          <div style={{ fontWeight: 'bold', flex: 1, textAlign: 'right', whiteSpace: 'nowrap' }}>{shopConfig.name_2 || ''} : {shopConfig.phone_2 || ''}</div>
         </div>
 
         {/* Title */}
-        <div style={{ textAlign: 'center', marginBottom: '18px' }}>
-          <h1 style={{ margin: 0, fontSize: '32px', fontWeight: 'bold', color: '#1e3a8a' }}>{shopConfig.shopName || 'Optic Palace'}</h1>
+        <div style={{ textAlign: 'center', marginTop: '-5px', marginBottom: '18px' }}>
+          <h1 style={{ margin: 0, fontSize: '40px', fontWeight: 'bold', color: '#1e3a8a' }}>{shopConfig.shopName || 'City Optical'}</h1>
         </div>
         
         {/* Subtitle / Address Box */}
-        <div style={{ display: 'block', textAlign: 'center', marginBottom: '16px', padding: '12px 8px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1.4 }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', textAlign: 'center', marginBottom: '16px', padding: '10px 16px', fontSize: '14px', fontWeight: 'bold', backgroundColor: '#1e3a8a', color: '#ffffff', lineHeight: 1.4 }}>
           {shopConfig.address ? shopConfig.address.toUpperCase() : ''}
         </div>
 
@@ -188,7 +192,7 @@ const CityPalaxeInvoice = React.forwardRef(({ order }, ref) => {
           <div>Thanks. Visit Again.</div>
         </div>
         <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-          <div style={{ fontWeight: 'bold', marginBottom: '30px', fontSize: '15px' }}>For, {shopConfig.shopName || 'City Optic Palace'}</div>
+          <div style={{ fontWeight: 'bold', marginBottom: '30px', fontSize: '15px' }}>For, {shopConfig.shopName || 'City Optical'}</div>
         </div>
       </div>
       
