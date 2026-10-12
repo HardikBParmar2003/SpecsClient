@@ -57,7 +57,7 @@ export const shopConfig = {
   shopName: "City Optical",
   shortName: "City Optical",
   email: "support@cityoptical.com",
-  address: "Mota Bazaar Road, Jumma Masjid, Near Delhi Darbar Hotel, Navsari, Gujarat",
+  address: "MOTA BAZAR ROAD NR JUMMA MASJID OPP DELHI DARBAR HOTEL NAVSARI GUJARAT INDIA",
   aboutText: "At City Optical, we believe that the right pair of glasses isn't just an accessory - it's an expression of your personality.",
   heroImage: "https://lh3.googleusercontent.com/gps-cs-s/APNQkAEJXuYZElxCxX3llHYovbVJbzoriWPvjI2TuIKXdeJW2HhjA7ocdo9PkWFuQBuwnXqUkMsRqgaJbykkvtP0NrR8VxGpYEyy5U0Qj8ds-LVqBhKnixRkLsXGMBQMaVvh6AVT6tdjVdyuyUu8=s1360-w1360-h1020-rw",
   downloadPrefix: "cityoptical",
